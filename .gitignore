@@ -1,0 +1,16 @@
+*.vs
+# Ignora todos os arquivos .log
+*.log
+
+# Ignora todos os arquivos .tmp (temporários)
+*.tmp
+
+# Ignora todos os arquivos executáveis do Windows
+
+# Ignora todos os arquivos de configuração de ambiente
+.env
+
+# Ignora todos os arquivos de dados gerados
+*.dat
+
+*.temp
