@@ -1,21 +1,21 @@
-// ProcessoPipeB.cpp : Este arquivo contém a função 'main'. A execução do programa começa e termina ali.
-//
 
-#include <iostream>
+#include <iostream> // 1. Inclui a biblioteca para 'std::cin' e 'std::cout'.
+#include <string>   // 2. Inclui a biblioteca para usar 'std::string'.
 
+int main() {
+    std::string input; // 3. Declara uma string para armazenar a entrada.
 
-int main()
-{
-    std::cout << "Hello World!\n";
+    // 4. 'std::getline' lê uma linha completa de texto da entrada padrão (std::cin).
+    // O sistema operacional, por baixo dos panos, está lendo os dados do pipe que foi redirecionado pelo processo pai.
+    std::getline(std::cin, input);
+
+    // 5. 'std::cout' imprime a mensagem na saída padrão.
+    // O sistema operacional, por baixo dos panos, está escrevendo os dados no pipe que o processo pai está lendo.
+    std::cout << "Filho: Recebi a mensagem -> " << input << "\n";
+
+    std::string response = "Mensagem recebida com sucesso!"; // 6. Declara uma string para a resposta.
+    // 7. Imprime a resposta para a saída padrão. Esta mensagem será lida pelo processo pai.
+    std::cout << response << "\n";
+
+    return 0;
 }
-
-// Executar programa: Ctrl + F5 ou Menu Depurar > Iniciar Sem Depuração
-// Depurar programa: F5 ou menu Depurar > Iniciar Depuração
-
-// Dicas para Começar: 
-//   1. Use a janela do Gerenciador de Soluções para adicionar/gerenciar arquivos
-//   2. Use a janela do Team Explorer para conectar-se ao controle do código-fonte
-//   3. Use a janela de Saída para ver mensagens de saída do build e outras mensagens
-//   4. Use a janela Lista de Erros para exibir erros
-//   5. Ir Para o Projeto > Adicionar Novo Item para criar novos arquivos de código, ou Projeto > Adicionar Item Existente para adicionar arquivos de código existentes ao projeto
-//   6. No futuro, para abrir este projeto novamente, vá para Arquivo > Abrir > Projeto e selecione o arquivo. sln

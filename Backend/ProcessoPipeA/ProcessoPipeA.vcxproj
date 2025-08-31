@@ -21,10 +21,9 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{f63c9da0-568b-41d1-b584-ee05c88964dd}</ProjectGuid>
-    <RootNamespace>Pipes</RootNamespace>
+    <ProjectGuid>{8051ce3c-8139-4b7f-8896-132fad0d283e}</ProjectGuid>
+    <RootNamespace>ProcessoPipeA</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>ProcessoPipeA</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
