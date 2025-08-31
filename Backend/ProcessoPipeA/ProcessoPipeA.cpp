@@ -38,7 +38,7 @@ int main() {
 
     ZeroMemory(&pi, sizeof(pi)); // 19. Limpa a estrutura 'pi' para o sistema a preencher.
 
-    std::wstring childExePath = L"C:\\ProjetoRA1-GP10\\Backend\\x64\\Debug\\ProcessoPipeB.exe"; // 20. O caminho para o executável do processo filho. 'L' indica uma string de caracteres largos.
+    std::wstring childExePath = L"C:\\Users\\Usuario\\Documents\\ProjetoRA1-GP10\\Backend\\x64\\Debug\\ProcessoPipeB.exe"; // 20. O caminho para o executável do processo filho. 'L' indica uma string de caracteres largos.
 
     // 21. A função 'CreateProcess' cria o novo processo.
     if (!CreateProcess(
