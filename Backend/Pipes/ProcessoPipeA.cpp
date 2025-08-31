@@ -1,8 +1,9 @@
 // Pipes.cpp : Este arquivo contém a função 'main'. A execução do programa começa e termina ali.
 //
 
+#include <windows.h>
 #include <iostream>
-
+#include <string>
 int main()
 {
     std::cout << "Hello World!\n";
