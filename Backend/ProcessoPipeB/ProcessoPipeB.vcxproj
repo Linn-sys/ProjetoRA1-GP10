@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{f63c9da0-568b-41d1-b584-ee05c88964dd}</ProjectGuid>
-    <RootNamespace>Pipes</RootNamespace>
+    <ProjectGuid>{c5091e3c-99cb-4864-ab9f-a08cf46b033e}</ProjectGuid>
+    <RootNamespace>ProcessoPipeB</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -124,7 +124,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Pipes.cpp" />
+    <ClCompile Include="ProcessoPipeB.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

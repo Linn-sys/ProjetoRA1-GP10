@@ -1,13 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36414.22 d17.14
+VisualStudioVersion = 17.14.36414.22
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Pipes", "Pipes\Pipes.vcxproj", "{F63C9DA0-568B-41D1-B584-EE05C88964DD}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sockets", "Sockets\Sockets.vcxproj", "{25F932A2-C446-4894-AE18-779AFC6CC0D5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SharedMemory", "SharedMemory\SharedMemory.vcxproj", "{0559B2AF-6E91-448F-9B2A-36483A1A5856}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProcessoPipeB", "ProcessoPipeB\ProcessoPipeB.vcxproj", "{C5091E3C-99CB-4864-AB9F-A08CF46B033E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProcessoPipeA", "ProcessoPipeA\ProcessoPipeA.vcxproj", "{8051CE3C-8139-4B7F-8896-132FAD0D283E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C5091E3C-99CB-4864-AB9F-A08CF46B033E} = {C5091E3C-99CB-4864-AB9F-A08CF46B033E}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,14 +22,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F63C9DA0-568B-41D1-B584-EE05C88964DD}.Debug|x64.ActiveCfg = Debug|x64
-		{F63C9DA0-568B-41D1-B584-EE05C88964DD}.Debug|x64.Build.0 = Debug|x64
-		{F63C9DA0-568B-41D1-B584-EE05C88964DD}.Debug|x86.ActiveCfg = Debug|Win32
-		{F63C9DA0-568B-41D1-B584-EE05C88964DD}.Debug|x86.Build.0 = Debug|Win32
-		{F63C9DA0-568B-41D1-B584-EE05C88964DD}.Release|x64.ActiveCfg = Release|x64
-		{F63C9DA0-568B-41D1-B584-EE05C88964DD}.Release|x64.Build.0 = Release|x64
-		{F63C9DA0-568B-41D1-B584-EE05C88964DD}.Release|x86.ActiveCfg = Release|Win32
-		{F63C9DA0-568B-41D1-B584-EE05C88964DD}.Release|x86.Build.0 = Release|Win32
 		{25F932A2-C446-4894-AE18-779AFC6CC0D5}.Debug|x64.ActiveCfg = Debug|x64
 		{25F932A2-C446-4894-AE18-779AFC6CC0D5}.Debug|x64.Build.0 = Debug|x64
 		{25F932A2-C446-4894-AE18-779AFC6CC0D5}.Debug|x86.ActiveCfg = Debug|Win32
@@ -41,6 +38,22 @@ Global
 		{0559B2AF-6E91-448F-9B2A-36483A1A5856}.Release|x64.Build.0 = Release|x64
 		{0559B2AF-6E91-448F-9B2A-36483A1A5856}.Release|x86.ActiveCfg = Release|Win32
 		{0559B2AF-6E91-448F-9B2A-36483A1A5856}.Release|x86.Build.0 = Release|Win32
+		{C5091E3C-99CB-4864-AB9F-A08CF46B033E}.Debug|x64.ActiveCfg = Debug|x64
+		{C5091E3C-99CB-4864-AB9F-A08CF46B033E}.Debug|x64.Build.0 = Debug|x64
+		{C5091E3C-99CB-4864-AB9F-A08CF46B033E}.Debug|x86.ActiveCfg = Debug|Win32
+		{C5091E3C-99CB-4864-AB9F-A08CF46B033E}.Debug|x86.Build.0 = Debug|Win32
+		{C5091E3C-99CB-4864-AB9F-A08CF46B033E}.Release|x64.ActiveCfg = Release|x64
+		{C5091E3C-99CB-4864-AB9F-A08CF46B033E}.Release|x64.Build.0 = Release|x64
+		{C5091E3C-99CB-4864-AB9F-A08CF46B033E}.Release|x86.ActiveCfg = Release|Win32
+		{C5091E3C-99CB-4864-AB9F-A08CF46B033E}.Release|x86.Build.0 = Release|Win32
+		{8051CE3C-8139-4B7F-8896-132FAD0D283E}.Debug|x64.ActiveCfg = Debug|x64
+		{8051CE3C-8139-4B7F-8896-132FAD0D283E}.Debug|x64.Build.0 = Debug|x64
+		{8051CE3C-8139-4B7F-8896-132FAD0D283E}.Debug|x86.ActiveCfg = Debug|Win32
+		{8051CE3C-8139-4B7F-8896-132FAD0D283E}.Debug|x86.Build.0 = Debug|Win32
+		{8051CE3C-8139-4B7F-8896-132FAD0D283E}.Release|x64.ActiveCfg = Release|x64
+		{8051CE3C-8139-4B7F-8896-132FAD0D283E}.Release|x64.Build.0 = Release|x64
+		{8051CE3C-8139-4B7F-8896-132FAD0D283E}.Release|x86.ActiveCfg = Release|Win32
+		{8051CE3C-8139-4B7F-8896-132FAD0D283E}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
