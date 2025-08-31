@@ -44,6 +44,8 @@ h1{
     padding: 16px;
     border-radius: 20px;
     height: 27vh;
+    overflow-y: auto;   /* ativa barra de rolagem se ultrapassar */
+    max-height: 27vh;
 }
 
 
@@ -66,3 +68,12 @@ h1{
     font-weight: 500;
     font-size: 12px;
 }
+
+/* .section-process_1, .section-process_2 {
+    overflow-y: auto;   /* ativa barra de rolagem se ultrapassar */
+    /* max-height: 50vh;   altura máxima da section */
+    /* padding: 10px; */
+    /* background-color: #111; */
+    /* border-radius: 8px; */ 
+/* }  */
+

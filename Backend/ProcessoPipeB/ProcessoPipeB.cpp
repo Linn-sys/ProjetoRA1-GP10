@@ -1,4 +1,3 @@
-
 #include <iostream> // 1. Inclui a biblioteca para 'std::cin' e 'std::cout'.
 #include <string>   // 2. Inclui a biblioteca para usar 'std::string'.
 

@@ -74,6 +74,7 @@ int main() {
         ) {
         std::cerr << "Erro ao escrever no pipe.\n";
     }
+    CloseHandle(hWritePipe);
 
     char buffer[256];
     DWORD bytesRead;
