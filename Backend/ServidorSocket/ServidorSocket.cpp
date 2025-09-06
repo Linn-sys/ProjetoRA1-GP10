@@ -6,6 +6,7 @@
 #include <thread>
 #include <vector>
 #include <mutex>
+#include <algorithm>
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -14,42 +15,63 @@ std::mutex mtx;
 
 void handleClient(SOCKET clientSocket) {
     char buf[4096];
-
     while (true) {
         ZeroMemory(buf, 4096);
         int bytesReceived = recv(clientSocket, buf, 4096, 0);
         if (bytesReceived <= 0) break;
 
         std::string mensagem(buf, 0, bytesReceived);
+
+        // Limpa a string de caracteres de nova linha ou retorno de carro
+        mensagem.erase(std::remove(mensagem.begin(), mensagem.end(), '\n'), mensagem.end());
+        mensagem.erase(std::remove(mensagem.begin(), mensagem.end(), '\r'), mensagem.end());
+
         std::cout << "[Servidor] Recebeu do cliente: " << mensagem << std::endl;
 
-        for (auto& ch : mensagem) if (ch == '\"') ch = '\'';
+        // Escapa as aspas duplas na mensagem
+        std::string mensagemEscapada = mensagem;
+        size_t pos = 0;
+        while ((pos = mensagemEscapada.find('"', pos)) != std::string::npos) {
+            mensagemEscapada.replace(pos, 1, "\\\"");
+            pos += 2;
+        }
 
-        // ENVIA PARA TODOS OS CLIENTES COMO PROCESSO 1 (cliente)
-        std::string respostaCliente = R"({"processo":1,"mensagem":")" + mensagem + "\"}\n";
+        // ENVIA A MENSAGEM DO CLIENTE PARA O NODE COMO PROCESSO 1
+        std::string respostaCliente = R"({"processo":1,"mensagem":")" + mensagemEscapada + "\"}\n";
 
         mtx.lock();
         for (SOCKET c : clientes) {
             send(c, respostaCliente.c_str(), (int)respostaCliente.size(), 0);
         }
         mtx.unlock();
+
+        // ENVIA UMA MENSAGEM DO SERVIDOR PARA O NODE COMO PROCESSO 2
+        std::string respostaServidor = R"({"processo":2,"mensagem":"Servidor recebeu e processou a mensagem.)" + mensagemEscapada + "\"}\n";
+
+        mtx.lock();
+        for (SOCKET c : clientes) {
+            send(c, respostaServidor.c_str(), (int)respostaServidor.size(), 0);
+            send(c, "\n", 1, 0);
+        }
+        mtx.unlock();
     }
     mtx.lock();
     clientes.erase(std::remove(clientes.begin(), clientes.end(), clientSocket), clientes.end());
     mtx.unlock();
-
 }
-
-void enviarServidor(std::string mensagem) {
-    for (auto& ch : mensagem) if (ch == '\"') ch = '\'';
-    std::string respostaServidor = R"({"processo":2,"mensagem":")" + mensagem + "\"}\n";
-
-    mtx.lock();
-    for (SOCKET c : clientes) {
-        send(c, respostaServidor.c_str(), (int)respostaServidor.size(), 0);
-    }
-    mtx.unlock();
-}
+//void enviarServidor(std::string mensagem) {
+//    for (size_t pos = 0; (pos = mensagem.find('"', pos)) != std::string::npos; pos += 2) {
+//        mensagem.replace(pos, 1, "\\\"");
+//    }
+//    //for (auto& ch : mensagem) if (ch == '\"') ch = '\'';
+//    std::string respostaServidor = R"({"processo":2,"mensagem":")" + mensagem + "\"}\n";
+//
+//    mtx.lock();
+//    for (SOCKET c : clientes) {
+//        send(c, respostaServidor.c_str(), (int)respostaServidor.size(), 0);
+//    }
+//    mtx.unlock();
+//}
 
 
 int main() {
@@ -90,16 +112,16 @@ int main() {
         t.detach();
     }
 
-    // no main(), depois do while(accept)
-    std::thread tServidor([]() {
-        std::string msgServidor;
-        while (true) {
-            std::getline(std::cin, msgServidor);
-            if (msgServidor == "sair") break;
-            enviarServidor(msgServidor);
-        }
-        });
-    tServidor.detach();
+    //// no main(), depois do while(accept)
+    //std::thread tServidor([]() {
+    //    std::string msgServidor;
+    //    while (true) {
+    //        std::getline(std::cin, msgServidor);
+    //        if (msgServidor == "sair") break;
+    //        enviarServidor(msgServidor);
+    //    }
+    //    });
+    //tServidor.detach();
 
 
     closesocket(serverSocket);

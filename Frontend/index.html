@@ -16,7 +16,6 @@
             <section class="section-process_1">
                 <div class="section-process_1_content">
                     <div class="section-process_1_content log"></div>
-                    <span class="text title">Ações do Processo 1</span>
                 </div>
             </section>  
         </div>
@@ -27,12 +26,43 @@
             <section class="section-process_2">
                 <div class="section-process_2_content">
                     <div class="section-process_2_content log"></div>
-                    <span class="text title">Ações do Processo 2</span>
                 </div>
             </section>
         </div>
     </div>
-<script src="script.js"></script>   
+    <div class="guia">
+        <div class="panel_opcoes">
+            <div class="panel_superior">
+                <small class="escolha">Escolha sua opção de processo:</small>
+                <select name="opcoes" id="opcoes">
+                    <option value="opcao_pipes" selected>Pipes Anônimos</option>
+                    <option value="opcao_sockets">Sockets</option>
+                    <option value="opcao_sharedmemory">Memória Compartilhada</option>
+                </select>
+                <button type="button" class="processo_start_button">
+                    <span>Iniciar processo</span>
+                </button>
+                <button type="button" class="processo_stop_button">
+                    <span>Finalizar processo</span>
+                </button>
+                <small class="status">Status: <span id="status-text" class="status-off">Desligado</span></small>
+            </div>
+            <hr class="linha_guia">
+            <div class="panel_inferior">
+                <small class="mensagem">Informe uma mensagem de entrada:</small>
+                <div class="entrada">
+                    <textarea class="input" placeholder="Digite sua mensagem e clique em Enviar"></textarea>
+                </div>
+                <button type="button" class="enviar_msg_button">
+                    <span>Enviar</span>
+                </button>
+                <button type="button" class="limpar_log_button">
+                    <span>Limpar Log</span>
+                </button>
+                <small class="status">Status último envio: <span id="status-envio"></span></small>
+            </div>
+        </div>
+    </div>
+<script src="script.js"></script>  
 </body>
 </html>
-
