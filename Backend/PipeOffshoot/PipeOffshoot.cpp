@@ -11,7 +11,7 @@ int main() {
     }
 
     std::wstring MensagemEnviada;
-    wchar_t BufferTemp[1025];
+    wchar_t BufferTemp[5000];
     DWORD BytesLidos;
 
     while (true) {
@@ -24,9 +24,11 @@ int main() {
 
         
         if (MensagemEnviada == L"PARAR") {
+            std::wcout << L"Offshoot recebeu: " << MensagemEnviada << "\n";
+            std::wcout << "<<<Inter Process Communication encerrada>>>\n";
             break;
         }
-        std::wcout << L"Offshoot recebeu: " << MensagemEnviada << "\n";
+        std::wcout << L"Offshoot recebeu: " << MensagemEnviada << "/Tamanho da mensagem em bytes: "<< BytesLidos << "\n";
         MensagemEnviada.clear();
     }
 

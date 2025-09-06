@@ -13,7 +13,7 @@ int main()
     AS.lpSecurityDescriptor = NULL;
     AS.bInheritHandle = TRUE;
 
-    if (!CreatePipe(&HandleLeitura,&HandleEscrita,&AS,1025)){
+    if (!CreatePipe(&HandleLeitura,&HandleEscrita,&AS,5000)){
         std::cout << "Erro ao criar o pipe..." << std::endl;
         return 1;
     }
@@ -28,11 +28,14 @@ int main()
     II.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     II.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
-    const WCHAR* C = L"C:\\Users\\SPIRIT INDIGO\\Documents\\Projetos\\CPP\\RA1\\ProjetoRA1-GP10\\Backend\\x64\\Debug\\PipeOffshoot.exe";
+    //const WCHAR* C = L"PipeOffshoot.exe";
+    //std::wstring C = L"PipeOffshoot.exe";
+    std::wstring C = L"PipeOffshoot.exe";
+    WCHAR* PonteiroString = &C[0];
 
     ZeroMemory(&IP, sizeof(IP));
 
-    if (!CreateProcess(C,NULL,NULL,NULL,TRUE,0,NULL,NULL,&II,&IP)) {
+    if (!CreateProcess(NULL,PonteiroString,NULL,NULL,TRUE,0,NULL,NULL,&II,&IP)) {
         std::cout << "Erro ao criar o processo..." << std::endl;
         return 1;
     }
@@ -41,11 +44,15 @@ int main()
 
     DWORD BytesTransferidos;
 
-    std::wcout << "COMUNICAÇÃO IPC ENTRE MAIN E OFFSHOOT" << "\n";
+    WCHAR TESTE[MAX_PATH];
+    GetCurrentDirectoryW(MAX_PATH, TESTE);
+    std::wcout << L"O diretório de PipeMain eh" << TESTE << "\n";
+    std::wcout << "<<<Inter Process Communication iniciada>>" << "\n";
     while (true) {
+        //std::cout << "Main enviou:" << std::endl;
         std::wstring msg;
         std::getline(std::wcin, msg);
-        WriteFile(HandleEscrita, msg.c_str(), msg.size() * sizeof(wchar_t), &BytesTransferidos, NULL);
+        WriteFile(HandleEscrita, msg.c_str(), static_cast<DWORD>(msg.size() * sizeof(wchar_t)), &BytesTransferidos, NULL);
         if (msg == L"PARAR") {
             break;
         }
