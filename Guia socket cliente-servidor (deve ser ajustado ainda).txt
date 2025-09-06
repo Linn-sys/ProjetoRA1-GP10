@@ -1,0 +1,10 @@
+Passos para executar o servidor c++ com os sockets locais:
+1. Compilar e rodar somente o ServidorSocket.cpp
+2. Escrever 'node server.js' no cmd dentro da pasta ponte-node
+3. Compilar e rodar somente o ClienteSocket.cpp
+4. Enviar aluma mensagem pelo ClienteSocket.exe
+5. A mensagem aparecerá no index.html a cada 2 segundos
+6. Falta ajustar para que as mensagens do servidor apareçam no 'Processo 2' do html
+7. Fazer o log (histórico) das mensagens só atualizar quando houver novas mensagens, não a cada 2 segundos e repetindo a mesma mensagem sempre
+
+
