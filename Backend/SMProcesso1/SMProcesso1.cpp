@@ -52,14 +52,11 @@ std::string read_text(SharedBuffer* shm, HANDLE hMutex) {
 
 // Mostra estado da memória e mutex
 void print_status(SharedBuffer* shm, HANDLE hMutex) {
-    DWORD wait = WaitForSingleObject(hMutex, 0); // Tenta pegar o mutex sem bloquear (timeout 0), apenas para apresentação
-    bool locked = (wait == WAIT_TIMEOUT) ? true : false; // Se deu timeout, alguém já está com o mutex → “travado”
-
+    WaitForSingleObject(hMutex, INFINITE); // Aguarda a liberação do Mutex 
     std::cout << "--------------------------\n";
-    std::cout << "Texto atual: " << std::string(shm->text, shm->text_length) << "\n";            // Mostra o texto conforme tamanho lógico
-    std::cout << "Mutex estava travado: " << (locked ? "Sim" : "Nao") << "\n";                   // Indica se mutex estava ocupado
+    std::cout << "Texto atual: " << std::string(shm->text, shm->text_length) << "\n"; // Mostra o texto conforme tamanho lógico
     std::cout << "--------------------------\n";
-    if (!locked) ReleaseMutex(hMutex); // Se conseguimos pegar o mutex (não estava travado), precisamos liberar aqui
+    ReleaseMutex(hMutex); // Libera o Mutex
 }
 
 // Thread que faz a leitura contínua da struct do Buffer
