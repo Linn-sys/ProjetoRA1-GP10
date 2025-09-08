@@ -1,132 +1,182 @@
-#include <windows.h>
-#include <iostream>
-#include <string>
-#include <thread>
-#include <chrono>
-#include <cstdint>
-#include <cstddef>
+﻿#include <windows.h>            // Declarações das APIs do Windows: CreateFileMapping, MapViewOfFile, CreateMutex, WaitForSingleObject etc.
+#include <iostream>             // std::cout, std::cin, std::cerr para I/O no console
+#include <string>               // std::string para manipular texto
+#include <thread>               // std::thread para criar a thread de leitura
+#include <chrono>               // std::chrono para sleep no loop da thread
+#include <cstdint>              // tipos de tamanho fixo (uint32_t)
+#include <cstddef>              // size_t
 
-// Defini��o da estrutura diretamente no cpp
-constexpr const char* SHM_NAME = "Local\\SharedMemoryExample";
-constexpr const char* MUTEX_NAME = "Local\\SharedMutexExample";
-constexpr size_t MAX_TEXT_SIZE = 1024;
+// Definição da estrutura diretamente no cpp
+constexpr const char* SHM_NAME = "Local\\SharedMemory";  // Nome do objeto de memória mapeada ("Local\" = visível só na sessão atual)
+constexpr const char* MUTEX_NAME = "Local\\SharedMutex"; // Nome do mutex (também na sessão atual)
+constexpr size_t MAX_TEXT_SIZE = 1001;                   // Capacidade do buffer de texto (entrada de usuário)
+std::atomic<bool> running(true);                         // Variável que verifica se alguém digitou "0". Atômica pois lida com a condição de corrida
 
 struct SharedBuffer {
-    uint32_t magic;            // indica se mem�ria inicializada
-    char text[MAX_TEXT_SIZE];  // texto compartilhado
-    size_t text_length;        // tamanho atual do texto
+    uint32_t magic;            // “assinatura” para saber se a memória já foi inicializado (0xC0FFEE01 quando ok)
+    char text[MAX_TEXT_SIZE];  // área de texto compartilhada entre processos
+    size_t text_length;        // tamanho útil atual do texto (quantos bytes válidos em 'text')
+    bool exit_flag;             // flag para encerramento global
 };
 
 #ifndef MY_ID
-#define MY_ID 2 // chatB
+#define MY_ID 2 // chatA
 // #define MY_ID 2 // chatB para o outro cpp
 #endif
+// A macro MY_ID identifica a instância (1 ou 2). 
 
 // Escreve no buffer compartilhado
 void write_text(SharedBuffer* shm, HANDLE hMutex, const std::string& text) {
-    WaitForSingleObject(hMutex, INFINITE);
+    WaitForSingleObject(hMutex, INFINITE);     // Realiza a posse do mutex após liberado
 
-    size_t len = text.size();
-    if (len > MAX_TEXT_SIZE) len = MAX_TEXT_SIZE;
+    size_t len = text.size();                  // Calcula tamanho de entrada
+    memcpy(shm->text, text.c_str(), len);      // Copia 'len' bytes da string para o buffer compartilhado. c.str() é um ponteiro para os caracteres da string
+    shm->text[len] = '\0';                     // Adiciona um terminador de string ao final
+    shm->text_length = len;                    // Atualiza o tamanho lógico
 
-    memcpy(shm->text, text.c_str(), len);
-    shm->text[len] = '\0';
-    shm->text_length = len;
-
-    ReleaseMutex(hMutex);
+    ReleaseMutex(hMutex);                      // Libera o mutex
 }
 
-// L� do buffer compartilhado
+// Lê do buffer compartilhado
 std::string read_text(SharedBuffer* shm, HANDLE hMutex) {
-    std::string result;
-    WaitForSingleObject(hMutex, INFINITE);
+    std::string result;                        // Cria uma variávrel para armazenar o valor da saída 
+    WaitForSingleObject(hMutex, INFINITE);     // Agurda a liberação do Mutex
 
-    if (shm->text_length > 0) {
-        result.assign(shm->text, shm->text_length);
+    if (shm->text_length > 0) {                // Verifica se há alguma coisa no Buffer
+        result.assign(shm->text, shm->text_length); // assign() é um método da classe string que substitui o conteúdo de result pelo char text definido pelo tamanho text_length
     }
 
-    ReleaseMutex(hMutex);
-    return result;
+    ReleaseMutex(hMutex);                       // Libera o Mutex
+    return result;                              // Retorna o texto lido (ou vazio)
 }
 
-// Mostra estado da mem�ria e mutex
+// Mostra estado da memória e mutex
 void print_status(SharedBuffer* shm, HANDLE hMutex) {
-    DWORD wait = WaitForSingleObject(hMutex, 0); // n�o bloqueia
-    bool locked = (wait == WAIT_TIMEOUT) ? true : false;
+    DWORD wait = WaitForSingleObject(hMutex, 0); // Tenta pegar o mutex sem bloquear (timeout 0), apenas para apresentação
+    bool locked = (wait == WAIT_TIMEOUT) ? true : false; // Se deu timeout, alguém já está com o mutex → “travado”
 
     std::cout << "--------------------------\n";
-    std::cout << "Memoria inicializada: " << (shm->magic == 0xC0FFEE01 ? "Sim" : "Nao") << "\n";
-    std::cout << "Texto atual: " << std::string(shm->text, shm->text_length) << "\n";
-    std::cout << "Mutex travado: " << (locked ? "Sim" : "Nao") << "\n";
+    std::cout << "Texto atual: " << std::string(shm->text, shm->text_length) << "\n";            // Mostra o texto conforme tamanho lógico
+    std::cout << "Mutex estava travado: " << (locked ? "Sim" : "Nao") << "\n";                   // Indica se mutex estava ocupado
     std::cout << "--------------------------\n";
+    if (!locked) ReleaseMutex(hMutex); // Se conseguimos pegar o mutex (não estava travado), precisamos liberar aqui
+}
 
-    if (!locked) ReleaseMutex(hMutex); // libera se conseguimos pegar
+// Thread que faz a leitura contínua da struct do Buffer
+void reader_thread(SharedBuffer* shm, HANDLE hMutex) {
+    std::string last;
+    while (running) { 
+        std::string text = read_text(shm, hMutex);
+        if (!text.empty() && text != last) { // Verifica se o último texto digitado não está vazio e se é diferente do anterior
+            last = text; // Se for, atualiza o último texto e mostra na tela
+            std::cout << "\n[Buffer Alterado] " << text << "\n";
+            print_status(shm, hMutex);
+        }
+        // Verifica flag de saída do Buffer
+        WaitForSingleObject(hMutex, INFINITE);
+        if (shm->exit_flag) { // Caso o flag de saída já esteja marcado encerra a Thread
+            ReleaseMutex(hMutex);
+            std::cout << "\n[Alerta] Chat encerrado pelo outro processo! Pressione Enter para sair.\n";
+            running = false;
+            break; 
+        }
+        ReleaseMutex(hMutex);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+}
+
+// Thread que monitora teclado
+void input_thread(SharedBuffer* shm, HANDLE hMutex) {
+    while (running) {
+        std::string input;
+        std::getline(std::cin, input);
+
+        if (!running) break;
+
+        if (input == "0") { // Caso o usuário tenha digitado 0, é marcado no flag da struct do Buffer true, sinalizando a saída
+            WaitForSingleObject(hMutex, INFINITE);
+            shm->exit_flag = true; 
+            ReleaseMutex(hMutex);
+            std::cout << "\n[Alerta] Chat encerrado.\n";
+            running = false; // Encerra a Thread
+            break;
+        }
+
+        write_text(shm, hMutex, input);
+    }
 }
 
 int main() {
-    // Criar ou abrir mem�ria compartilhada
-    HANDLE hMap = CreateFileMappingA(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(SharedBuffer), SHM_NAME);
-    if (!hMap) {
-        std::cerr << "Erro ao criar/abrir mem�ria: " << GetLastError() << "\n";
-        return 1;
+    // Criar ou abrir memória compartilhada
+    HANDLE hMap = CreateFileMappingA(
+        INVALID_HANDLE_VALUE,     // Parâmetro para especificar o Handle de memória física (arquivo). INVALID_HANDLE_VALUE → mapeamento em arquivo de paginação (memória anônima, área de memória na RAM)
+        nullptr,                  // Segurança padrão
+        PAGE_READWRITE,           // Proteção: leitura e escrita apenas (caso de Shared Memory)
+        0,                        // Tamanho de objeto de memória inicial
+        sizeof(SharedBuffer),     // Tamanho de objeto de memória final (assume o tamanho da estrutura do Buffer)
+        SHM_NAME                  // Nome do objeto (permite que outro processo “abra” o mesmo segmento pelo nome), criado inicialmente nos dois processos
+    );
+    if (!hMap) { // Se CreateFileMappingA falhar, retorna null
+        std::cerr << "Erro ao criar/abrir memória: " << GetLastError() << "\n"; // Em caso de falha, imprime código de erro do Windows
+        return 1;                                                               // Sai com erro
     }
 
-    SharedBuffer* shm = static_cast<SharedBuffer*>(MapViewOfFile(hMap, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(SharedBuffer)));
-    if (!shm) {
-        std::cerr << "Erro ao mapear mem�ria: " << GetLastError() << "\n";
-        CloseHandle(hMap);
-        return 1;
+    SharedBuffer* shm = static_cast<SharedBuffer*>( // Ponteiro shm para o início da região de memória, tendo o formato da struct SharedBuffer
+        MapViewOfFile(            // Função da API do Windows que mapeia e retorna um ponteiro do objeto da memória criada, sendo possível acessar direto a memória (ler/escrever)
+            hMap,                 // Handle do mapeamento criado anteriormente
+            FILE_MAP_ALL_ACCESS,  // Tipo de acesso leitura/escrita desejado à visão, necesse caso acesso completo
+            0, 0,                 // Indica o deslocamento inicial dentro do objeto. Offset alto e baixo = 0 (começa no início)
+            sizeof(SharedBuffer)  // Tamanho da visão (aqui igual ao tamanho da estrutura do Buffer)
+        )
+        );
+    if (!shm) { // Se MapViewOfFile falhar, retorna null
+        std::cerr << "Erro ao mapear memória: " << GetLastError() << "\n"; // MapViewOfFile falhou
+        CloseHandle(hMap);                                                 // Fecha handle do mapeamento
+        return 1;                                                          // Sai com erro
     }
 
     // Criar ou abrir mutex
-    HANDLE hMutex = CreateMutexA(nullptr, FALSE, MUTEX_NAME);
-    if (!hMutex) {
+    HANDLE hMutex = CreateMutexA( // Retorna um Handle do Mutex criado
+        nullptr,   // Segurança padrão
+        FALSE,     // Não adquirir posse inicial, ou seja, o processo não da lock inicialmente
+        MUTEX_NAME // Nome do mutex (compartilhado por processos), criado inicialmente nos dois processos
+    );
+    if (!hMutex) { // Se CreateMutexA falhar, retorna null
         std::cerr << "Erro ao criar mutex: " << GetLastError() << "\n";
-        UnmapViewOfFile(shm);
-        CloseHandle(hMap);
-        return 1;
+        UnmapViewOfFile(shm);  // Desmapeia visão
+        CloseHandle(hMap);     // Fecha mapeamento
+        return 1;              // Sai com erro
     }
 
-    // Inicializa��o �nica
-    WaitForSingleObject(hMutex, INFINITE);
-    if (shm->magic != 0xC0FFEE01) {
-        shm->magic = 0xC0FFEE01;
-        shm->text_length = 0;
-        shm->text[0] = '\0';
+    // Função da API do Windows usada para esperar até que o objeto de sincronização (Mutex) esteja liberado
+    WaitForSingleObject(
+        hMutex,     // Handle do Mutex
+        INFINITE    // Tempo máximo para esperar, nesse caso infinito
+    );
+
+    if (shm->magic != 0xB16B00B5) {        // Se assinatura não está setada, esta é a primeira vez
+        shm->magic = 0xB16B00B5;           // Marca como inicializado
+        shm->text_length = 0;              // Zera tamanho lógico
+        shm->text[0] = '\0';               // Coloca string vazia
+        shm->exit_flag = false;
     }
-    ReleaseMutex(hMutex);
+    std::cout << "Memoria inicializada: " << (shm->magic == 0xB16B00B5 ? "Sim" : "Nao") << "\n"; // Verifica se a memória foi inicilizada e apresenta na tela
+    ReleaseMutex(hMutex);                  // Libera mutex
 
-    std::cout << "[Chat " << (MY_ID == 1 ? "A" : "B") << "] iniciado! Digite mensagens (Ctrl+C para sair)\n";
+    std::cout << "[Processo " << (MY_ID == 1 ? "A" : "B") << "] iniciado! Digite mensagens (0 para sair)\n";
+    // Mensagem de boas-vindas com identificação da instância (A ou B)
 
-    // Thread de leitura cont�nua
-    std::thread reader([&]() {
-        std::string last;
-        while (true) {
-            std::string text = read_text(shm, hMutex);
-            if (!text.empty() && text != last) {
-                last = text;
-                std::cout << "\n[Recebido] " << text << "\n> ";
-                print_status(shm, hMutex);
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
-        });
+    std::thread reader(reader_thread, shm, hMutex);
+    std::thread input_monitor(input_thread, shm, hMutex);
 
-    // Loop principal de escrita
-    std::string input;
-    while (true) {
-        std::cout << "> ";
-        std::getline(std::cin, input);
-        write_text(shm, hMutex, input);
-        print_status(shm, hMutex);
-    }
-
+    // Aguarda as threads finalizarem
     reader.join();
+    input_monitor.join();  
 
     // Limpeza
-    UnmapViewOfFile(shm);
-    CloseHandle(hMap);
-    CloseHandle(hMutex);
+    UnmapViewOfFile(shm);                    // Desmapeia visão (inacessível na prática porque não sai do loop)
+    CloseHandle(hMap);                       // Fecha handle do mapeamento
+    CloseHandle(hMutex);                     // Fecha handle do mutex
 
-    return 0;
+    return 0;                                // Fim do programa
 }
