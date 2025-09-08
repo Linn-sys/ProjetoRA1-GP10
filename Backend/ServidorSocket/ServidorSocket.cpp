@@ -69,11 +69,18 @@ void handleClient(SOCKET clientSocket) {
 }
 
 int main() {
-    WSADATA wsaData;
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) return 1;
+    WSADATA wsaData; // Struct definida no Windows que guarda as informações da implementação do Winsock
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) { // WSAStartup que inicializa a DDL do Winsock
+        std::cerr << "Erro ao iniciar Winsock." << std::endl; // Em falha, finaliza e retorna a mensagem ao usuário
+        return 1;
+    }
 
-    SOCKET serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverSocket == INVALID_SOCKET) { WSACleanup(); return 1; }
+    SOCKET serverSocket = socket(AF_INET, SOCK_STREAM, 0); // Faz a criação do socket TCP (SOCK_STREAM) / IPv4 (AF_INET)
+    if (serverSocket == INVALID_SOCKET) { // Caso ocorra alguma falha na criação do socket, mostra mensagem ao usuário e encerra
+        std::cerr << "Erro ao criar socket. Código: " << WSAGetLastError() << std::endl;
+        WSACleanup(); // Faz a limpeza da Winsock
+        return 1;
+    }
 
     sockaddr_in serverHint{};
     serverHint.sin_family = AF_INET;
