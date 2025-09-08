@@ -1,4 +1,5 @@
-﻿#include <windows.h>            // Declarações das APIs do Windows: CreateFileMapping, MapViewOfFile, CreateMutex, WaitForSingleObject etc.
+﻿//#pragma comment(linker, "/subsystem:windows /ENTRY:mainCRTStartup")
+#include <windows.h>            // Declarações das APIs do Windows: CreateFileMapping, MapViewOfFile, CreateMutex, WaitForSingleObject etc.
 #include <iostream>             // std::cout, std::cin, std::cerr para I/O no console
 #include <string>               // std::string para manipular texto
 #include <thread>               // std::thread para criar a thread de leitura
@@ -25,18 +26,6 @@ struct SharedBuffer {
 #endif
 // A macro MY_ID identifica a instância (1 ou 2). 
 
-// Escreve no buffer compartilhado
-void write_text(SharedBuffer* shm, HANDLE hMutex, const std::string& text) {
-    WaitForSingleObject(hMutex, INFINITE);     // Realiza a posse do mutex após liberado
-
-    size_t len = text.size();                  // Calcula tamanho de entrada
-    memcpy(shm->text, text.c_str(), len);      // Copia 'len' bytes da string para o buffer compartilhado. c.str() é um ponteiro para os caracteres da string
-    shm->text[len] = '\0';                     // Adiciona um terminador de string ao final
-    shm->text_length = len;                    // Atualiza o tamanho lógico
-
-    ReleaseMutex(hMutex);                      // Libera o mutex
-}
-
 // Lê do buffer compartilhado
 std::string read_text(SharedBuffer* shm, HANDLE hMutex) {
     std::string result;                        // Cria uma variávrel para armazenar o valor da saída 
@@ -50,35 +39,44 @@ std::string read_text(SharedBuffer* shm, HANDLE hMutex) {
     return result;                              // Retorna o texto lido (ou vazio)
 }
 
-// Mostra estado da memória e mutex
-void print_status(SharedBuffer* shm, HANDLE hMutex) {
-    WaitForSingleObject(hMutex, INFINITE); // Aguarda a liberação do Mutex 
-    std::cout << "--------------------------\n";
-    std::cout << "Texto atual: " << std::string(shm->text, shm->text_length) << "\n"; // Mostra o texto conforme tamanho lógico
-    std::cout << "--------------------------\n";
-    ReleaseMutex(hMutex); // Libera o Mutex
+// Escreve no buffer compartilhado
+void write_text(SharedBuffer* shm, HANDLE hMutex, const std::string& text) {
+    WaitForSingleObject(hMutex, INFINITE);     // Realiza a posse do mutex após liberado
+
+    size_t len = text.size();                  // Calcula tamanho de entrada
+    memcpy(shm->text, text.c_str(), len);      // Copia 'len' bytes da string para o buffer compartilhado. c.str() é um ponteiro para os caracteres da string
+    shm->text[len] = '\0';                     // Adiciona um terminador de string ao final
+    shm->text_length = len;                    // Atualiza o tamanho lógico
+
+    std::string last;
+    if (!text.empty() && text != last) { // Verifica se o último texto digitado não está vazio e se é diferente do anterior
+        std::cout << "{\"processo\":" << MY_ID << ",\"mensagem\":\"[Processo B alterou o Buffer] " << text << "\"}" << std::endl;
+        last = text;
+    }
+
+    ReleaseMutex(hMutex);                      // Libera o mutex
 }
 
 // Thread que faz a leitura contínua da struct do Buffer
 void reader_thread(SharedBuffer* shm, HANDLE hMutex) {
     std::string last;
-    while (running) { 
+    while (running) {
         std::string text = read_text(shm, hMutex);
         if (!text.empty() && text != last) { // Verifica se o último texto digitado não está vazio e se é diferente do anterior
-            last = text; // Se for, atualiza o último texto e mostra na tela
-            std::cout << "\n[Buffer Alterado] " << text << "\n";
-            print_status(shm, hMutex);
+            std::cout << "{\"processo\":" << MY_ID << ",\"mensagem\":\"[Buffer atualizado] " << text << "\"}" << std::endl;
+            last = text;
         }
         // Verifica flag de saída do Buffer
         WaitForSingleObject(hMutex, INFINITE);
         if (shm->exit_flag) { // Caso o flag de saída já esteja marcado encerra a Thread
             ReleaseMutex(hMutex);
-            std::cout << "\n[Alerta] Chat encerrado pelo outro processo! Pressione Enter para sair.\n";
+            //std::cout << "\n[Alerta] Chat encerrado pelo outro processo! Pressione Enter para sair.\n";
+            std::cout << "{\"processo\":" << MY_ID << ",\"mensagem\":\"[Alerta] Chat encerrado pelo outro processo!  Finalize o processo para encerrar." << "\"}" << std::endl;
             running = false;
-            break; 
+            break;
         }
         ReleaseMutex(hMutex);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 }
 
@@ -92,9 +90,10 @@ void input_thread(SharedBuffer* shm, HANDLE hMutex) {
 
         if (input == "0") { // Caso o usuário tenha digitado 0, é marcado no flag da struct do Buffer true, sinalizando a saída
             WaitForSingleObject(hMutex, INFINITE);
-            shm->exit_flag = true; 
+            shm->exit_flag = true;
             ReleaseMutex(hMutex);
-            std::cout << "\n[Alerta] Chat encerrado.\n";
+            //std::cout << "\n[Alerta] Chat encerrado.\n";
+            std::cout << "{\"processo\":" << MY_ID << ",\"mensagem\":\"[Alerta] Chat encerrado! Finalize o processo para encerrar." << "\"}" << std::endl;
             running = false; // Encerra a Thread
             break;
         }
@@ -157,10 +156,17 @@ int main() {
         shm->text[0] = '\0';               // Coloca string vazia
         shm->exit_flag = false;
     }
-    std::cout << "Memoria inicializada: " << (shm->magic == 0xB16B00B5 ? "Sim" : "Nao") << "\n"; // Verifica se a memória foi inicilizada e apresenta na tela
+    std::cout << "{\"processo\":" << MY_ID
+        << ",\"mensagem\":\"Memoria inicializada: "
+        << (shm->magic == 0xB16B00B5 ? "Sim" : "Nao")
+        << "\"}" << std::endl; 
     ReleaseMutex(hMutex);                  // Libera mutex
 
-    std::cout << "[Processo " << (MY_ID == 1 ? "A" : "B") << "] iniciado! Digite mensagens (0 para sair)\n";
+    std::cout << "{\"processo\":" << MY_ID
+        << ",\"mensagem\":\"[Processo "
+        << (MY_ID == 1 ? "A" : "B")
+        << "] iniciado! Digite mensagens (0 para sair)\"}"
+        << std::endl;
     // Mensagem de boas-vindas com identificação da instância (A ou B)
 
     std::thread reader(reader_thread, shm, hMutex);
@@ -168,7 +174,7 @@ int main() {
 
     // Aguarda as threads finalizarem
     reader.join();
-    input_monitor.join();  
+    input_monitor.join();
 
     // Limpeza
     UnmapViewOfFile(shm);                    // Desmapeia visão (inacessível na prática porque não sai do loop)

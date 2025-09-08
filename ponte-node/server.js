@@ -26,8 +26,8 @@ const executaveis = {
     cliente: "C:/Users/Usuario/Documents/ProjetoRA1-GP10/Backend/x64/Debug/PipeMain.exe",
   },
   sharedmemory: {
-    servidor: null,
-    cliente: null,
+    servidor: "C:/Users/Usuario/Documents/ProjetoRA1-GP10/Backend/x64/Debug/smprocesso1.exe",
+    cliente: "C:/Users/Usuario/Documents/ProjetoRA1-GP10/Backend/x64/Debug/smprocesso2.exe"
   }
 };
 
@@ -173,46 +173,70 @@ app.get("/start-processo/:tipo", (req, res) => {
   // -------------------------
   // Caso 3: MEMORIA COMPARTILHADA
   // -------------------------
-  // else if (tipo === 'sharedmemory') {
-  //   mensagens = [];
-  //   // Inicia o cliente (PipeMain), que por sua vez cria o destinatário
-  //   console.log("[Node] Iniciando PipeMain (que cria o Offshoot)...");
+  else if (tipo === 'sharedmemory') {
+    mensagens = [];
 
-  //   clienteProcess = spawn(paths.cliente, [], {
-  //     cwd: path.dirname(paths.cliente),
-  //     detached: false,
-  //   });
+    console.log("[Node] Iniciando Processo A e Processo B de Shared Memory...");
+    servidorProcess = spawn(paths.servidor, [], {
+      cwd: path.dirname(paths.servidor),
+      detached: false,
+    });
+    clienteProcess = spawn(paths.cliente, [], {
+      cwd: path.dirname(paths.cliente),
+      detached: false,
+    });
 
-  //   let bufferPipe = "";
+    // Captura saída do Processo A
+    servidorProcess.stdout.on("data", (data) => {
+      const linhas = data.toString().split("\n");
+      linhas.forEach(linha => {
+        if (linha.trim().length > 0) {
+          try {
+            const msg = JSON.parse(linha.trim());
+            mensagens.push(msg);
+          } catch (e) {
+            console.error("[Node] JSON inválido do shared memory:", linha);
+          }
 
-  //   // Escuta mensagens do PipeMain (remetente)
-  //   clienteProcess.stdout.on("data", (data) => {
-  //     bufferPipe += data.toString();
-  //     let index;
-  //     while ((index = bufferPipe.indexOf("\n")) >= 0) {
-  //       const linha = bufferPipe.substring(0, index).trim();
-  //       bufferPipe = bufferPipe.substring(index + 1);
+          console.log("[Node] [ProcA]:", linha.trim());
+        }
+      });
+    });
 
-  //       if (linha.length > 0) {
-  //         try {
-  //           const msg = JSON.parse(linha);
-  //           mensagens.push(msg);
-  //           console.log("[Node] Recebido do PipeMain:", msg);
-  //         } catch (e) {
-  //           console.error("[Node] JSON inválido do PipeMain:", linha);
-  //         }
-  //       }
-  //     }
-  //   });
+    // Captura saída do Processo B
+    clienteProcess.stdout.on("data", (data) => {
+      const linhas = data.toString().split("\n");
+      linhas.forEach(linha => {
+        if (linha.trim().length > 0) {
+          try {
+            const msg = JSON.parse(linha.trim());
+            mensagens.push(msg);
+          } catch (e) {
+            console.error("[Node] JSON inválido do shared memory:", linha);
+          }
 
-  //   clienteProcess.stderr.on("data", (data) => {
-  //     console.error(`[PipeMain ERRO]: ${data}`);
-  //   });
-    
-  // }
+          console.log("[Node] [ProcA]:", linha.trim());
+        }
+      });
+    });
+  }
 
   res.json({ status: `Processos de ${tipo} iniciados!` });
 });
+
+// Evento que vai ser disparado quando um processo filho é encerrado
+if (servidorProcess) {
+    servidorProcess.on('exit', (code, signal) => {
+        console.log(`[Node] Processo servidor (PID: ${servidorProcess.pid}) encerrado.`);
+        servidorProcess = null;
+    });
+}
+if (clienteProcess) {
+    clienteProcess.on('exit', (code, signal) => {
+        console.log(`[Node] Processo cliente (PID: ${clienteProcess.pid}) encerrado.`);
+        clienteProcess = null;
+    });
+}
 
 // NOVO: Endpoint genérico para parar um processo
 app.get("/stop-processo/:tipo", (req, res) => {
@@ -224,17 +248,29 @@ app.get("/stop-processo/:tipo", (req, res) => {
   try {
     const tipoParado = processoAtual; // Captura o tipo que será finalizado
     if (clienteProcess && clienteProcess.pid) {
-      exec(`taskkill /F /PID ${clienteProcess.pid}`, (err) => {
-        if (err) console.error("Erro ao finalizar cliente:", err);
-      });
+      // exec(`taskkill /F /PID ${clienteProcess.pid}`, (err) => {
+      //   if (err) console.error("Erro ao finalizar cliente:", err);
+      // });
+      exec(`taskkill /F /PID ${clienteProcess.pid}`);
+      // exec(`taskkill /F /PID ${clienteProcess.pid}`, (err, stdout, stderr) => {
+      //           if (err && !stderr.includes("não foi encontrado")) {
+      //               console.error("Erro ao finalizar cliente:", err);
+      //           }
+          }
       clienteProcess = null;
-    }
+    
     if (servidorProcess && servidorProcess.pid) {
-      exec(`taskkill /F /PID ${servidorProcess.pid}`, (err) => {
-        if (err) console.error("Erro ao finalizar servidor:", err);
-      });
+      // exec(`taskkill /F /PID ${servidorProcess.pid}`, (err) => {
+      //   if (err) console.error("Erro ao finalizar servidor:", err);
+      // });
+      exec(`taskkill /F /PID ${servidorProcess.pid}`);
+            // exec(`taskkill /F /PID ${servidorProcess.pid}`, (err, stdout, stderr) => {
+            //     if (err && !stderr.includes("não foi encontrado")) {
+            //         console.error("Erro ao finalizar servidor:", err);
+            //     }
+          }
       servidorProcess = null;
-    }
+    
     if (client) {
       client.destroy();
       client = null;
@@ -271,38 +307,27 @@ app.post("/enviar-mensagem", (req, res) => {
 });
 
 // TO DO:
-// app.post("/enviar-mensagem-sm", (req, res) => {
-//     // Recebe o objeto com as duas mensagens do front-end
-//     const { mensagemA, mensagemB } = req.body;
+app.post("/enviar-mensagem-sm", (req, res) => {
+// Recebe o objeto com as duas mensagens do front-end
+  const { mensagemA, mensagemB } = req.body;
 
-//     if (!servidorProcess) {
-//         return res.status(400).json({ status: "Processos de Memória Compartilhada não estão rodando." });
-//     }
-    
-//     // AQUI vai a lógica para enviar as mensagens para os executáveis C++ de Memória Compartilhada.
+  if (!servidorProcess || !clienteProcess) {
+    return res.status(400).json({ status: "Processos de Shared Memory não estão rodando." });
+  }
 
-//     const clientSM = new net.Socket();
-//     clientSM.connect(54001, "127.0.0.1", () => {
-//         // Envia as mensagens em formato JSON para o serviço C++
-//         clientSM.write(JSON.stringify({
-//             procA: mensagemA,
-//             procB: mensagemB
-//         }));
-//     });
-
-//     clientSM.on("error", (err) => {
-//         console.error("Erro ao conectar no serviço de Memória Compartilhada:", err);
-//         res.status(500).json({ status: "Erro ao enviar mensagens para o C++." });
-//     });
-
-//     // Você pode capturar a resposta do serviço C++ aqui
-//     clientSM.on("data", (data) => {
-//         res.json({ status: data.toString() });
-//         clientSM.destroy();
-//     });
-//     // Retorna uma resposta ao front-end
-//     res.json({ status: "Mensagens de Memória Compartilhada enviadas para os processos C++." });
-// });
+  try {
+    if (mensagemA && servidorProcess.stdin.writable) {
+      servidorProcess.stdin.write(mensagemA + "\n");
+    }
+    if (mensagemB && clienteProcess.stdin.writable) {
+      clienteProcess.stdin.write(mensagemB + "\n");
+    }
+    res.json({ status: "Mensagens enviadas para os processos de Shared Memory." });
+  } catch (err) {
+    console.error("Erro ao enviar mensagens:", err);
+    res.status(500).json({ status: "Erro ao enviar mensagens." });
+  } 
+});
 
 // NOVO ENDPOINT para limpar as mensagens
 

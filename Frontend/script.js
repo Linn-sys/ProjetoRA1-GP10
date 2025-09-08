@@ -199,7 +199,6 @@ document.querySelector(".enviar_msg_button_sm").addEventListener("click", async 
     const msgB = document.querySelector(".input-B").value;
     
     if (msgA.trim() === "" && msgB.trim() === "") {
-        statusEnvio.textContent = 'Pelo menos uma das mensagens deve ser preenchida.';
         statusEnvioSM.textContent = 'Pelo menos uma das mensagens deve ser preenchida.';
         return;
     }
@@ -216,10 +215,9 @@ document.querySelector(".enviar_msg_button_sm").addEventListener("click", async 
       console.log(dados.status);
       document.querySelector(".input-A").value = "";
       document.querySelector(".input-B").value = "";
-      statusEnvio.textContent = dados.status;
       statusEnvioSM.textContent = dados.status;
+      
     } catch (err) {
-      statusEnvio.textContent = "Erro ao enviar mensagem.";
       statusEnvioSM.textContent = "Erro ao enviar mensagem.";
       console.error("Erro ao enviar mensagem:", err);
     }
@@ -287,7 +285,8 @@ async function carregarMensagens() {
           span.innerText = `${nomes.processo1}: ${msg.mensagem}`;
           proc1.appendChild(span);
           proc1.scrollTop = proc1.scrollHeight;
-        } else if (msg.processo === 2) {
+        }
+        if (msg.processo === 2) {
           span.innerText = `${nomes.processo2}: ${msg.mensagem}`;
           proc2.appendChild(span);
           proc2.scrollTop = proc2.scrollHeight;
@@ -306,5 +305,3 @@ setInterval(carregarMensagens, 1500);
 carregarMensagens();
 
 document.querySelector(".limpar_log_button").addEventListener("click", limparLog);
-
-
