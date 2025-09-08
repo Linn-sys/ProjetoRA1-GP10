@@ -11,7 +11,7 @@
     <div class="processes">
         <div class="process_1">
             <div class="process_1_content">
-                <h1 id="name_process_1">Processo 1</h1>  
+                <h1 id="name_process_1"></h1>  
             </div>
             <section class="section-process_1">
                 <div class="section-process_1_content">
@@ -21,7 +21,7 @@
         </div>
         <div class="process_2">
             <div class="process_2_content">
-                <h1 id="name_process_2">Processo 2</h1>   
+                <h1 id="name_process_2"></h1>   
             </div>
             <section class="section-process_2">
                 <div class="section-process_2_content">
@@ -35,31 +35,53 @@
             <div class="panel_superior">
                 <small class="escolha">Escolha sua opção de processo:</small>
                 <select name="opcoes" id="opcoes">
-                    <option value="opcao_pipes" selected>Pipes Anônimos</option>
-                    <option value="opcao_sockets">Sockets</option>
-                    <option value="opcao_sharedmemory">Memória Compartilhada</option>
+                    <option value="pipes" selected>Pipes Anônimos</option>
+                    <option value="sockets">Sockets</option>
+                    <option value="sharedmemory">Memória Compartilhada</option>
                 </select>
-                <button type="button" class="processo_start_button">
-                    <span>Iniciar processo</span>
-                </button>
-                <button type="button" class="processo_stop_button">
-                    <span>Finalizar processo</span>
-                </button>
-                <small class="status">Status: <span id="status-text" class="status-off">Desligado</span></small>
+                <div class="botoes_superiores">
+                    <button type="button" class="processo_start_button">
+                        <span>Iniciar processo</span>
+                    </button>
+                    <button type="button" class="processo_stop_button">
+                        <span>Finalizar processo</span>
+                    </button>
+                </div>
+                <small class="status">Status do servidor C++: <span id="status-text" class="status-off">Desligado</span><span id="status-tipo"> </span></small>
             </div>
             <hr class="linha_guia">
-            <div class="panel_inferior">
+            <div id="painel-padrao" class="panel_inferior">
                 <small class="mensagem">Informe uma mensagem de entrada:</small>
                 <div class="entrada">
-                    <textarea class="input" placeholder="Digite sua mensagem e clique em Enviar"></textarea>
+                    <textarea class="input" maxlength="1000" placeholder="Digite sua mensagem e clique em Enviar"></textarea>
                 </div>
-                <button type="button" class="enviar_msg_button">
-                    <span>Enviar</span>
-                </button>
-                <button type="button" class="limpar_log_button">
-                    <span>Limpar Log</span>
-                </button>
+                <div class="botoes_inferiores">
+                    <button type="button" class="enviar_msg_button">
+                        <span>Enviar</span>
+                    </button>
+                    <button type="button" class="limpar_log_button">
+                        <span>Limpar Log</span>
+                    </button>
+                </div>
                 <small class="status">Status último envio: <span id="status-envio"></span></small>
+            </div>
+            <div id="painel-sharedmemory" class="panel_inferior" style="display: none;">
+                <small class="mensagem">Informe as mensagens de entrada:</small>
+                <div class="entrada">
+                    <textarea class="input-A" placeholder="Mensagem do Processo A"></textarea>
+                </div>
+                <div class="entrada">
+                    <textarea class="input-B" placeholder="Mensagem do Processo B"></textarea>
+                </div>
+                <div class="botoes_inferiores_sm">
+                    <button type="button" class="enviar_msg_button_sm">
+                        <span>Enviar</span>
+                    </button>
+                    <button type="button" class="limpar_log_button_sm">
+                        <span>Limpar Log</span>
+                    </button>
+                </div>
+                <small class="status">Status último envio: <span id="status-envio-sm"></span></small>
             </div>
         </div>
     </div>

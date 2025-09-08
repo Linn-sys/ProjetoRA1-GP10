@@ -1,7 +1,0 @@
-Passos para executar o servidor c++ com os sockets locais:
-2. Escrever 'node server.js' no cmd dentro da pasta ponte-node.
-3. Clique no botão Iniciar no index.html.
-4. Na seção "Informe uma mensagem de entrada" envie alguma mensagem no input em branco.
-5. A mensagem enviada aparecerá no log dos Processos 1 e 2, sendo o Processo 1 o Cliente (usuário que enviou a mensagem) e o Processo 2 o Servidor (que diz que recebeu e processou determinada mensagem)
-
-

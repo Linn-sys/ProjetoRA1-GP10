@@ -8,7 +8,7 @@ body {
     display: flex;
     padding: 8px;
     width: 100%;
-    height: 50vh;
+    height: 48vh;
     gap: 20px;              /* controla o espaço entre os blocos */;
     justify-content: space-between;
     box-sizing: border-box;
@@ -23,15 +23,15 @@ body {
     color: #b3b3b3;
     font-weight: 600;
     font-size: 14px;
-    height: 45vh;
+    height: 38vh;
     margin: 0;
+    border: 1px solid white;
 }
 
 h1{
     text-align: center;
     align-items: center;
     margin: 8px;
-    padding: 8px;
 }
 
 .section-process_1, .section-process_2{
@@ -42,7 +42,7 @@ h1{
     font-weight: 600;
     font-size: 14px;
     margin: 8px;
-    padding: 16px;
+    padding: 10px 5px 3px 10px;
     border-radius: 20px;
     height: 27vh;
     overflow-y: auto;   /* ativa barra de rolagem se ultrapassar */
@@ -64,16 +64,8 @@ h1{
 
 .section-process_1_content .subtitle, .section-process_2_content .subtitle{
     font-weight: 500;
-    font-size: 12px;
+    font-size: 14px;
 }
-
-/* .section-process_1, .section-process_2 {
-    overflow-y: auto;   /* ativa barra de rolagem se ultrapassar */
-    /* max-height: 50vh;   altura máxima da section */
-    /* padding: 10px; */
-    /* background-color: #111; */
-    /* border-radius: 8px; */ 
-/* }  */
 
 .guia{
     display: flex;
@@ -81,13 +73,14 @@ h1{
     width: 100%;
     height: 50vh;
     gap: 20px;              /* controla o espaço entre os blocos */;
-    justify-content: space-between;
+    justify-content: center; /* Centraliza horizontalmente */
+    align-items: center; /* Centraliza verticalmente */
     box-sizing: border-box;
 }
 
 .panel_opcoes{
-    width:30%;
-    margin: 8px;
+    width:40%;
+    margin: 3px;
     height: auto;
     padding: 5px;
     background-color: #121212;
@@ -100,12 +93,13 @@ h1{
 }
 
 #opcoes{
+    justify-content: center;
     text-align: center;
-    border-radius: 5px;
+    border-radius: 25px;
     width: 95%;
     font-weight: 500;
     font-size: 14px;
-    margin: 8px 0px 0px 8px;
+    margin: 8px 0px 0px 14px;
     padding: 8px;
     height: 28%;
 }
@@ -120,9 +114,24 @@ h1{
     margin: 8px;
 }
 
-.guia .panel_opcoes .processo_start_button, .guia .panel_opcoes .processo_stop_button{
+.botoes_superiores, .botoes_inferiores{
+    display: flex;
+    justify-content: space-between;
+    margin: 8px;
     flex: 1;
-    justify-content: center;
+    gap: 20px;
+}
+
+.botoes_inferiores_sm{
+    display: flex;
+    justify-content: space-between;
+    margin: 8px;
+    flex: 1;
+    gap: 20px;
+}
+
+.guia .panel_opcoes .botoes_superiores .processo_start_button, .guia .panel_opcoes .botoes_superiores .processo_stop_button{
+    
     align-items: center;
     background-color: #838383;
     border: 1px solid #878787;
@@ -130,13 +139,12 @@ h1{
     font-weight: bold;
     cursor: pointer;
     width: 45%;
-    margin: 8px;
     padding: 8px;
+    margin: 0px 8px 0px 8px;
     border-radius: 20px;
     text-decoration: none;
     text-transform: none;
 
-    /* https://www.freecodecamp.org/news/css-button-style-hover-color-and-background/#states */
 }
 
 .guia .panel_opcoes .processo_start_button:hover, .guia .panel_opcoes .processo_stop_button:hover{
@@ -152,30 +160,31 @@ h1{
 
 .guia .entrada{
     display: flex;
-    align-items: center;
+    font-weight: 500;
+    font-size: 14px;
     width: 95%;
-    height: 20%;
-    margin-left: 8px;
-    margin-top: 8px;
+    height: 2%;
+    margin: 8px 0px 0px 14px;
     background-color: white;
-    border-radius: 500px;
+    border-radius: 25px;
     border: 1px solid transparent;
 }
 
 .guia .entrada textarea{
     background: transparent;
     border: none;
-    padding: 0px 10px 0px 12px;
     color: #000000;
-    margin: 2px 0px 0px 8px;
+    padding: 6px 6px 1px 20px;
     outline: none; /* Retira a marcação da borda do input, deixando limpo*/
     resize: none;        /* tira aquele canto de redimensionar */
     width: 100%;
-    height: 20px;
     overflow: hidden;    /* evita scroll dentro */
     box-sizing: border-box;
 }
 
+.guia .entrada textarea::placeholder {
+    color: #807f7f; /* Cor cinza mais clara, ajuste se precisar */
+}
 
 .guia .panel_opcoes .enviar_msg_button, .guia .panel_opcoes .limpar_log_button{
     flex: 1;
@@ -187,7 +196,26 @@ h1{
     font-weight: bold;
     cursor: pointer;
     width: 45%;
-    margin: 8px;
+    margin: 0px 8px 0px 8px;
+    padding: 8px;
+    border-radius: 20px;
+    text-decoration: none;
+    text-transform: none;
+
+    /* https://www.freecodecamp.org/news/css-button-style-hover-color-and-background/#states */
+}
+
+.guia .panel_opcoes .enviar_msg_button_sm, .guia .panel_opcoes .limpar_log_button_sm{
+    flex: 1;
+    justify-content: center;
+    align-items: center;
+    background-color: #838383;
+    border: 1px solid #878787;
+    color: #ffffff;
+    font-weight: bold;
+    cursor: pointer;
+    width: 45%;
+    margin: 0px 8px 0px 8px;
     padding: 8px;
     border-radius: 20px;
     text-decoration: none;
@@ -197,6 +225,11 @@ h1{
 }
 
 .guia .panel_opcoes .enviar_msg_button:hover, .guia .panel_opcoes .limpar_log_button:hover{
+    background-color: #555555;
+    transition: 0.7s;
+}
+
+.guia .panel_opcoes .enviar_msg_button_sm:hover, .guia .panel_opcoes .limpar_log_button_sm:hover{
     background-color: #555555;
     transition: 0.7s;
 }

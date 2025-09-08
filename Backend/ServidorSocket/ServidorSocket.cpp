@@ -22,36 +22,44 @@ void handleClient(SOCKET clientSocket) {
 
         std::string mensagem(buf, 0, bytesReceived);
 
-        // Limpa a string de caracteres de nova linha ou retorno de carro
-        mensagem.erase(std::remove(mensagem.begin(), mensagem.end(), '\n'), mensagem.end());
-        mensagem.erase(std::remove(mensagem.begin(), mensagem.end(), '\r'), mensagem.end());
-
-        std::cout << "[Servidor] Recebeu do cliente: " << mensagem << std::endl;
-
-        // Escapa as aspas duplas na mensagem
-        std::string mensagemEscapada = mensagem;
-        size_t pos = 0;
-        while ((pos = mensagemEscapada.find('"', pos)) != std::string::npos) {
-            mensagemEscapada.replace(pos, 1, "\\\"");
-            pos += 2;
-        }
-
-        // ENVIA A MENSAGEM DO CLIENTE PARA O NODE COMO PROCESSO 1
-        std::string respostaCliente = R"({"processo":1,"mensagem":")" + mensagemEscapada + "\"}\n";
-
+        // 1. ENVIA A MENSAGEM DO CLIENTE PARA O NODE (PROCESSO 1)
+        std::cout << "[Servidor] Recebeu do cliente e retransmitindo: " << mensagem << std::endl;
         mtx.lock();
         for (SOCKET c : clientes) {
-            send(c, respostaCliente.c_str(), (int)respostaCliente.size(), 0);
+            send(c, mensagem.c_str(), (int)mensagem.size(), 0);
         }
         mtx.unlock();
 
-        // ENVIA UMA MENSAGEM DO SERVIDOR PARA O NODE COMO PROCESSO 2
-        std::string respostaServidor = R"({"processo":2,"mensagem":"Servidor recebeu e processou a mensagem.)" + mensagemEscapada + "\"}\n";
+        // 2. ENVIA A MENSAGEM DE RESPOSTA DO SERVIDOR PARA O NODE (PROCESSO 2)
+
+        // Extrai a mensagem de texto do JSON do cliente
+        std::string textoCliente;
+        size_t posMensagem = mensagem.find("\"mensagem\":\"");
+        if (posMensagem != std::string::npos) {
+            size_t startPos = posMensagem + strlen("\"mensagem\":\"");
+            size_t endPos = mensagem.find("\"", startPos);
+            if (endPos != std::string::npos) {
+                textoCliente = mensagem.substr(startPos, endPos - startPos);
+            }
+        }
+
+        // Constrói a mensagem de resposta do servidor, concatenando o texto extraído
+        std::string mensagemServidor = " Recebeu e processou a seguinte mensagem: " + textoCliente;
+
+        // Escapa as aspas duplas na nova mensagem do servidor
+        std::string mensagemServidorEscapada = mensagemServidor;
+        size_t pos = 0;
+        while ((pos = mensagemServidorEscapada.find('"', pos)) != std::string::npos) {
+            mensagemServidorEscapada.replace(pos, 1, "\\\"");
+            pos += 2;
+        }
+
+        // Monta o JSON para a resposta do servidor.
+        std::string respostaServidor = "{\"processo\":2,\"mensagem\":\"" + mensagemServidorEscapada + "\"}\n";
 
         mtx.lock();
         for (SOCKET c : clientes) {
             send(c, respostaServidor.c_str(), (int)respostaServidor.size(), 0);
-            send(c, "\n", 1, 0);
         }
         mtx.unlock();
     }
@@ -59,20 +67,6 @@ void handleClient(SOCKET clientSocket) {
     clientes.erase(std::remove(clientes.begin(), clientes.end(), clientSocket), clientes.end());
     mtx.unlock();
 }
-//void enviarServidor(std::string mensagem) {
-//    for (size_t pos = 0; (pos = mensagem.find('"', pos)) != std::string::npos; pos += 2) {
-//        mensagem.replace(pos, 1, "\\\"");
-//    }
-//    //for (auto& ch : mensagem) if (ch == '\"') ch = '\'';
-//    std::string respostaServidor = R"({"processo":2,"mensagem":")" + mensagem + "\"}\n";
-//
-//    mtx.lock();
-//    for (SOCKET c : clientes) {
-//        send(c, respostaServidor.c_str(), (int)respostaServidor.size(), 0);
-//    }
-//    mtx.unlock();
-//}
-
 
 int main() {
     WSADATA wsaData;
@@ -111,18 +105,6 @@ int main() {
         std::thread t(handleClient, clientSocket);
         t.detach();
     }
-
-    //// no main(), depois do while(accept)
-    //std::thread tServidor([]() {
-    //    std::string msgServidor;
-    //    while (true) {
-    //        std::getline(std::cin, msgServidor);
-    //        if (msgServidor == "sair") break;
-    //        enviarServidor(msgServidor);
-    //    }
-    //    });
-    //tServidor.detach();
-
 
     closesocket(serverSocket);
     WSACleanup();
