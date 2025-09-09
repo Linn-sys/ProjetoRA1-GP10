@@ -97,14 +97,10 @@ void handleClient(SOCKET clientSocket) {
         mtx.unlock();
     }
 
-    // Saiu do loop: conexão caiu/fechou. Remove o socket desse cliente do vetor global.
-    // Obs.: ainda não chamamos closesocket(clientSocket) aqui — seria recomendado.
     mtx.lock();
     clientes.erase(std::remove(clientes.begin(), clientes.end(), clientSocket), clientes.end());
     mtx.unlock();
 
-    // SUGESTÃO: chamar closesocket(clientSocket) aqui para liberar o handle.
-    // closesocket(clientSocket);
 }
 
 int main() {
