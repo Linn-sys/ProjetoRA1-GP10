@@ -30,37 +30,32 @@ std::mutex mtx;
 void handleClient(SOCKET clientSocket) {
     char buf[4096]; // Buffer de recepção (4 KB)
     while (true) {
-        // Zera o buffer (Windows helper; alternativa portátil: std::fill_n(buf, 4096, 0))
-        ZeroMemory(buf, 4096);
+        // Zera o buffer 
+        ZeroMemory(buf, 4096); // Preenche o buffer com zeros
 
-        // 'recv' é BLOQUEANTE por padrão: espera dados do cliente.
-        // Retornos:
+        // A função 'recv' da API Winsock bloqueia até receber os dados de um cliente
         //  >0 = bytes lidos; 0 = conexão fechada de forma ordenada; <0 = erro.
-        int bytesReceived = recv(clientSocket, buf, 4096, 0);
+        int bytesReceived = recv(clientSocket, buf, 4096, 0); // Utiliza o socket do cliente, o buffer e o tamanho máximo
         if (bytesReceived <= 0) break; // Sai do loop se cliente fechou ou houve erro
 
-        // Constrói std::string com exatamente 'bytesReceived' bytes (pode conter '\0')
+        // Transcreve os bytes recebidos em uma mensagem string
         std::string mensagem(buf, 0, bytesReceived);
 
         // ---------------- (1) BROADCAST DA MENSAGEM RECEBIDA ----------------
         std::cout << "[Servidor] Recebeu do cliente e retransmitindo: "
             << mensagem << std::endl;
 
-        // Bloqueia o mutex para ler o vetor 'clientes' com segurança
-        mtx.lock();
+        // Bloqueia o mutex para ler o vetor 'clientes' 
+        mtx.lock(); 
         for (SOCKET c : clientes) {
-            // Envia a mensagem original para TODOS os clientes (inclui o remetente)
-            // Obs.: não há tratamento de erro de 'send' aqui.
-            send(c, mensagem.c_str(), (int)mensagem.size(), 0);
+            // Envia a mensagem original para todos os clientes. Utiliza o iterador de clietes, a mensagem e o tamanho da mensagem 
+            send(c, mensagem.c_str(), (int)mensagem.size(), 0); 
         }
-        mtx.unlock();
+        mtx.unlock(); // Desbloqueia o Mutex
 
-        // ---------------- (2) MONTA RESPOSTA DO "PROCESSO 2" ----------------
+        // ---------------- (2) MONTA RESPOSTA DO "Servidor" ----------------
 
         // Extrai o valor do campo "mensagem" de um JSON bem simples.
-        // Observação IMPORTANTE:
-        // - Esse parsing é frágil (não lida com espaços, escapes complexos,
-        //   outras chaves, ordem diferente etc.). Ideal: usar biblioteca JSON.
         std::string textoCliente;
         size_t posMensagem = mensagem.find("\"mensagem\":\"");
         if (posMensagem != std::string::npos) {
@@ -77,7 +72,6 @@ void handleClient(SOCKET clientSocket) {
             " Recebeu e processou a seguinte mensagem: " + textoCliente;
 
         // Escapa aspas duplas (") no conteúdo para gerar JSON válido
-        // Obs.: escapa só aspas; se houver \n, \r, \\, unicode, não cobre todos os casos.
         std::string mensagemServidorEscapada = mensagemServidor;
         size_t pos = 0;
         while ((pos = mensagemServidorEscapada.find('"', pos)) != std::string::npos) {
@@ -85,11 +79,11 @@ void handleClient(SOCKET clientSocket) {
             pos += 2; // avança depois da sequência de escape
         }
 
-        // Monta o JSON da resposta (adiciona '\n' ao final; útil se cliente lê por linha)
+        // Monta o JSON da resposta (adiciona '\n' ao final)
         std::string respostaServidor =
             "{\"processo\":2,\"mensagem\":\"" + mensagemServidorEscapada + "\"}\n";
 
-        // Envia a resposta do "processo 2" para TODOS os clientes (broadcast)
+        // Envia a resposta do "servidor" para TODOS os clientes (broadcast)
         mtx.lock();
         for (SOCKET c : clientes) {
             send(c, respostaServidor.c_str(), (int)respostaServidor.size(), 0);
@@ -108,8 +102,9 @@ int main() {
     WSADATA wsaData;
 
     // Carrega e inicializa a DLL do Winsock com versão 2.2. Necessário passar um ponteiro para a Struck WSADATA
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        std::cerr << "Erro ao iniciar Winsock." << std::endl;
+    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (result != 0) { // Se falhar, retorna um código de erro
+        std::cerr << "WSAStartup falhou: " << result << std::endl;
         return 1;
     }
 
@@ -127,7 +122,7 @@ int main() {
     serverHint.sin_port = htons(54000); // Define a porta (54000). htons() converte para o formato da rede
     inet_pton(AF_INET, "127.0.0.1", &serverHint.sin_addr); // inet_pton() converte o formato do IP em string para o formato da rede, já colocando na struct
 
-    // Associa socket ao endereço/porta
+    // Associa socket ao endereço/porta do servidor
     if (bind(serverSocket, (sockaddr*)&serverHint, sizeof(serverHint)) == SOCKET_ERROR) { // bind() relaciona o socket criado com o ponteiro do endereço de serverHint feito o cast com o tipo sockaddr
         // Em caso de erro, encerra o socket do servidor e limpa a Winsock
         closesocket(serverSocket);
@@ -147,27 +142,27 @@ int main() {
 
     // Loop principal de aceitação: bloqueia até aparecer um cliente
     while (true) {
-        sockaddr_in client;
-        int clientSize = sizeof(client);
+        sockaddr_in client; // Cria uma struct de enderaçamento do cliente para receber os dados da conexão
+        int clientSize = sizeof(client); // Armazena o tamanho da struct do endereço do cliente
 
-        // Aceita uma conexão. Retorna um novo socket para esse cliente.
+        // Função que aceita uma conexão do cliente. Retorna um novo socket para esse cliente no servidor. Utiliza o socket do servidor, o ponteiro do endereço do cliente do tipo sockaddr e o tamanho da struck do endereço do cliente 
         SOCKET clientSocket = accept(serverSocket, (sockaddr*)&client, &clientSize);
-        if (clientSocket == INVALID_SOCKET) continue; // ignora falhas e tenta de novo
+        if (clientSocket == INVALID_SOCKET) continue; // Caso ocorra alguma falha, reinicia o loop indo para a próxima iteração
 
         std::cout << "[Servidor] Cliente conectado!\n";
 
-        // Adiciona o socket desse cliente ao vetor compartilhado (protegido por mutex)
-        mtx.lock();
-        clientes.push_back(clientSocket);
-        mtx.unlock();
+        // Adiciona o socket desse cliente ao vetor compartilhado (protegido por mutex para evitar que threads mexam na lista de clientes ao mesmo tempo)
+        mtx.lock(); // Bloqueia o Mutex
+        clientes.push_back(clientSocket); // Adiciona o socket no vetor de sockets de clientes
+        mtx.unlock(); // Libera o Mutex
 
         // Cria a thread de atendimento e a "destaca" (detach)
         // Obs.: detach => sem join no final; a thread gerencia seu próprio ciclo de vida.
-        std::thread t(handleClient, clientSocket);
-        t.detach();
+        std::thread t(handleClient, clientSocket); // Cria uma therad utilizando a função handleClient(), enviando o handle do socket do cliente
+        t.detach(); // Roda a thread em "segundo plano", e ao finalizar, 
     }
 
-    // Este ponto é inalcançável com o while(true) acima, mas deixado por clareza
+    // Fecha o socket do servidor e limpa a Winsock
     closesocket(serverSocket);
     WSACleanup();
     return 0;
