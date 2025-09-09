@@ -11,7 +11,7 @@
 ### Têm-se um **Servidor Socket** (arquivo c++) que é iniciado na porta 54000 e um **Cliente Socket** (arquivo c++) que se conecta nessa mesma porta, e quando o cliente envia uma mensagem para o servidor, essa troca de informações é acompanhada e registrada pelo servidor node, que recupera as mensagens e envia para o front, mostrando na tela a mensagem *X* enviada do cliente, e o aviso de que o servidor recebeu *X* mensagem.
 
 ## Memória Compartilhada
-### TO DO
+### Possuí 2 processos e um buffer. Cada processo consegue ler e escrever no Buffer. Os dois processos são os mesmos, e conseguem utilizar o mesmo Buffer compartilhado e o mesmo Mutex para sincronização. Possuem 2 threads que ficam rodando simultaneamente em ambos os processos, uma de leitura do buffer (analisa se houve alteração), e outra de input do usuário. Ao digitar 0, é encerrado o programa em ambos os processos, além das threads. 
 
 ## Testes Realizados
 ### Testamos a possibilidade de enviar dados dos 2 processos na memória compartilhada e o envio é bidirecional com sucesso, a funcionalidade de encerramentos de todos os 3 tipos de programa e todos encerram adequadamente, a formatação JSON do estado do programa funciona totalmente.
