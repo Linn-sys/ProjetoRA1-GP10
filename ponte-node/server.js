@@ -18,16 +18,16 @@ let processoAtual = null;
 // Mapa para guardar os caminhos dos executáveis
 const executaveis = {
   sockets: {
-    servidor: "C:/Users/Usuario/Documents/ProjetoRA1-GP10/Backend/x64/Debug/ServidorSocket.exe",
-    cliente: "C:/Users/Usuario/Documents/ProjetoRA1-GP10/Backend/x64/Debug/ClienteSocket.exe",
+    servidor: path.resolve(__dirname, "../Backend/x64/Debug/ServidorSocket.exe"),
+    cliente: path.resolve(__dirname, "../Backend/x64/Debug/ClienteSocket.exe"),
   },
   pipes: {
-    servidor: "C:/Users/Usuario/Documents/ProjetoRA1-GP10/Backend/x64/Debug/PipeOffshoot.exe",
-    cliente: "C:/Users/Usuario/Documents/ProjetoRA1-GP10/Backend/x64/Debug/PipeMain.exe",
+    servidor: path.resolve(__dirname, "../Backend/x64/Debug/PipeOffshoot.exe"),
+    cliente: path.resolve(__dirname, "../Backend/x64/Debug/PipeMain.exe"),
   },
   sharedmemory: {
-    servidor: "C:/Users/Usuario/Documents/ProjetoRA1-GP10/Backend/x64/Debug/smprocesso1.exe",
-    cliente: "C:/Users/Usuario/Documents/ProjetoRA1-GP10/Backend/x64/Debug/smprocesso2.exe"
+    servidor: path.resolve(__dirname, "../Backend/x64/Debug/SMProcesso1.exe"),
+    cliente: path.resolve(__dirname, "../Backend/x64/Debug/SMProcesso2.exe")
   }
 };
 
@@ -248,27 +248,13 @@ app.get("/stop-processo/:tipo", (req, res) => {
   try {
     const tipoParado = processoAtual; // Captura o tipo que será finalizado
     if (clienteProcess && clienteProcess.pid) {
-      // exec(`taskkill /F /PID ${clienteProcess.pid}`, (err) => {
-      //   if (err) console.error("Erro ao finalizar cliente:", err);
-      // });
       exec(`taskkill /F /PID ${clienteProcess.pid}`);
-      // exec(`taskkill /F /PID ${clienteProcess.pid}`, (err, stdout, stderr) => {
-      //           if (err && !stderr.includes("não foi encontrado")) {
-      //               console.error("Erro ao finalizar cliente:", err);
-      //           }
-          }
+    }
       clienteProcess = null;
     
     if (servidorProcess && servidorProcess.pid) {
-      // exec(`taskkill /F /PID ${servidorProcess.pid}`, (err) => {
-      //   if (err) console.error("Erro ao finalizar servidor:", err);
-      // });
       exec(`taskkill /F /PID ${servidorProcess.pid}`);
-            // exec(`taskkill /F /PID ${servidorProcess.pid}`, (err, stdout, stderr) => {
-            //     if (err && !stderr.includes("não foi encontrado")) {
-            //         console.error("Erro ao finalizar servidor:", err);
-            //     }
-          }
+    }
       servidorProcess = null;
     
     if (client) {

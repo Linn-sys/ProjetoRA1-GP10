@@ -8,7 +8,7 @@ const nameProcess2 = document.getElementById('name_process_2');
 const painelPadrao = document.getElementById('painel-padrao');
 const painelSharedMemory = document.getElementById('painel-sharedmemory');
 
-// Mapeamento dos nomes de exibição
+// Mapeamento dos nomes de exibição de cada processo de acordo com a opção escolhida
 const nomesProcessos = {
     pipes: {
         processo1: "Remetente",
@@ -24,7 +24,7 @@ const nomesProcessos = {
     }
 };
 
-// Função para atualizar a interface (texto e cor)
+// Função para atualizar a interface de status (ligado/desligado + tipo de processo)
 function updateUI(status) {
     if (status === 'on') {
         statusText.textContent = 'Ligado';
@@ -44,7 +44,7 @@ function updateUI(status) {
     }
 }
 
-// Adicionar um ouvinte de evento para quando a opção for alterada
+// Evento que troca os nomes/processos exibidos e o painel mostrado conforme a opção escolhida
 selectElement.addEventListener('change', () => {
     const selectedOption = selectElement.value;
     const nomes = nomesProcessos[selectedOption];
@@ -52,7 +52,7 @@ selectElement.addEventListener('change', () => {
         nameProcess1.textContent = nomes.processo1;
         nameProcess2.textContent = nomes.processo2;
     }
-    // Lógica para mostrar o painel correto
+    // Mostra o painel correto de acordo com o tipo selecionado
     if (selectedOption === 'sharedmemory') {
         painelPadrao.style.display = 'none';
         painelSharedMemory.style.display = 'block';
@@ -62,7 +62,7 @@ selectElement.addEventListener('change', () => {
     }
 });
 
-// Verifica o estado salvo no localStorage quando a página é carregada
+// Quando a página carrega, recupera os valores do localStorage para manter o estado
 document.addEventListener('DOMContentLoaded', () => {
     // Tenta obter o status salvo. Se não existir, usa 'off' como padrão.
     const savedStatus = localStorage.getItem('processStatus') || 'off';
@@ -70,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedType = localStorage.getItem('processType') || 'pipes';
     // Define o valor do <select> com o tipo de processo salvo
     selectElement.value = savedType;
+    // Atualiza a interface
     updateUI(savedStatus);
     const selectedOption = selectElement.value;
     const nomes = nomesProcessos[selectedOption];
@@ -77,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nameProcess1.textContent = nomes.processo1;
         nameProcess2.textContent = nomes.processo2;
     }
-    // Chama a lógica de esconder/mostrar o painel aqui também, para que ele inicie no estado correto.
+    // Mostra/esconde painel correto logo na inicialização
     if (selectedOption === 'sharedmemory') {
         painelPadrao.style.display = 'none';
         painelSharedMemory.style.display = 'block';
@@ -89,10 +90,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Botão iniciar
 document.querySelector(".processo_start_button").addEventListener("click", async () => {
-    console.log("Cliquei em iniciar"); // testando
+    console.log("Cliquei em iniciar"); // log de teste
     const selectedOption = selectElement.value; // Captura o valor selecionado
     try {
-    // Envia a opção selecionada na URL para o servidor
+    // Chama o backend para iniciar o processo com a opção escolhida
     const res = await fetch(`http://localhost:3000/start-processo/${selectedOption}`);
     const dados = await res.json();
     console.log(dados.status);
@@ -111,7 +112,6 @@ document.querySelector(".processo_start_button").addEventListener("click", async
     const newStatus = 'on';
 
     // Se a resposta do servidor indicar sucesso, atualiza a UI.
-    // O servidor.js já está retornando "Um processo já está rodando."
     if (dados.status.includes("iniciados!")) {
       const newStatus = 'on';
       // Salva o novo status no localStorage
@@ -144,10 +144,11 @@ document.querySelector(".processo_stop_button").addEventListener("click", async 
   try {
     // Envia a opção selecionada na URL para o servidor
     const res = await fetch(`http://localhost:3000/stop-processo/${selectedOption}`);
-    await limparLog();
+    await limparLog(); // limpa os logs locais
     const dados = await res.json();
+    // Pega a resposta do backend (dados.status) e loga no console
     console.log(dados.status);
-    statusEnvio.textContent = dados.status;
+    statusEnvio.textContent = dados.status; // Atualiza a mensagem de status das ações 
     statusEnvioSM.textContent = dados.status;
     // Define o status como 'off'
     const newStatus = 'off';
@@ -168,19 +169,24 @@ document.querySelector(".enviar_msg_button").addEventListener("click", async () 
   const inputElement = document.querySelector(".input");
   const mensagem = inputElement.value;
 
+  // bloqueia envio vazio
   if (mensagem.trim() === "") {
      statusEnvio.textContent = 'A mensagem não pode ser vazia.';
      statusEnvioSM.textContent = 'A mensagem não pode ser vazia.';
      return; // Não envia mensagem vazia
   }
+  // Quando clica em Enviar, ele faz um fetch (requisição HTTP) para a rota do backend enviar-mensagem.
   try {
     const res = await fetch("http://localhost:3000/enviar-mensagem", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      // Aqui só tem o envio de uma mensagem por vez, enviada pelo Remetente ou Cliente (Processo 1).
+      // O backend repassa pro processo 2 (Servidor).
       body: JSON.stringify({ mensagem: mensagem }),
     });
+    // O servidor responde e o res.json() transforma a resposta em JSON pra ser usado no front.
     const dados = await res.json();
     console.log(dados.status);
     inputElement.value = ""; // Limpa o input após o envio
@@ -193,26 +199,32 @@ document.querySelector(".enviar_msg_button").addEventListener("click", async () 
   }
 });
 
+// Botão Enviar Mensagem (painel memória compartilhada)
 document.querySelector(".enviar_msg_button_sm").addEventListener("click", async () => {
     // Lógica para enviar as mensagens A e B para o backend.
     const msgA = document.querySelector(".input-A").value;
     const msgB = document.querySelector(".input-B").value;
     
+    // Impede envio se os dois campos estiverem vazios
     if (msgA.trim() === "" && msgB.trim() === "") {
         statusEnvioSM.textContent = 'Pelo menos uma das mensagens deve ser preenchida.';
         return;
     }
   
+    // Quando clica em Enviar, ele faz um fetch (requisição HTTP) para a rota do backend enviar-mensagem-sm.
     try {
       const res = await fetch("http://localhost:3000/enviar-mensagem-sm", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        // Ele envia duas mensagens de uma vez (mensagemA e mensagemB), porque na memória compartilhada os dois processos podem escrever simultaneamente.
         body: JSON.stringify({ mensagemA: msgA, mensagemB: msgB }),
       });
+      // O servidor responde e o res.json() transforma a resposta em JSON pra ser usado no front.
       const dados = await res.json();
       console.log(dados.status);
+      // limpa os inputs após enviar
       document.querySelector(".input-A").value = "";
       document.querySelector(".input-B").value = "";
       statusEnvioSM.textContent = dados.status;
@@ -223,6 +235,7 @@ document.querySelector(".enviar_msg_button_sm").addEventListener("click", async 
     }
 });
 
+// Botão Limpar Log (painel memória compartilhada)
 document.querySelector(".limpar_log_button_sm").addEventListener("click", async () => {
     // Lógica para limpar os inputs e o log
     await limparLog();
@@ -230,12 +243,13 @@ document.querySelector(".limpar_log_button_sm").addEventListener("click", async 
     document.querySelector(".input-B").value = "";
 });
 
-// Botão de Limpar Log
+// Botão de Limpar Log na tela e no servidor
 async function limparLog() {
   const proc1 = document.querySelector(".section-process_1_content");
   const proc2 = document.querySelector(".section-process_2_content");
   
   // Apaga o conteúdo visualmente
+  // Remove mensagens do front (deixa só o título <h1>)
   while (proc1.children.length > 1) {
       proc1.removeChild(proc1.lastChild);
   }
@@ -260,13 +274,16 @@ async function limparLog() {
   }
 }
 
+// guarda a quantidade de mensagens já exibidas
 let ultimaQuantidade = 0;
 
+// Função que carrega mensagens do servidor e exibe na tela
 async function carregarMensagens() {
   try {
     const res = await fetch("http://localhost:3000/mensagens");
-    const dados = await res.json(); // agora é array
+    const dados = await res.json(); // deve retornar array
 
+    // Só adiciona mensagens novas
     if (Array.isArray(dados) && dados.length > ultimaQuantidade) {
       const novos = dados.slice(ultimaQuantidade); // pega só o que é novo
       ultimaQuantidade = dados.length;
@@ -281,15 +298,16 @@ async function carregarMensagens() {
         const span = document.createElement("span");
         span.classList.add("text", "subtitle");
 
+        // Para cada mensagem nova vinda do servidor, ele cria um elemento <span> e coloca o texto dentro.
         if (msg.processo === 1) {
           span.innerText = `${nomes.processo1}: ${msg.mensagem}`;
           proc1.appendChild(span);
-          proc1.scrollTop = proc1.scrollHeight;
+          proc1.scrollTop = proc1.scrollHeight; // scroll automático
         }
         if (msg.processo === 2) {
           span.innerText = `${nomes.processo2}: ${msg.mensagem}`;
           proc2.appendChild(span);
-          proc2.scrollTop = proc2.scrollHeight;
+          proc2.scrollTop = proc2.scrollHeight; // scroll automático
         }
       });
     }
@@ -300,8 +318,9 @@ async function carregarMensagens() {
   }
 }
 
-// Atualiza a cada 1.5s
+// scroll automático
 setInterval(carregarMensagens, 1500);
 carregarMensagens();
 
+// Botão Limpar Log (painel padrão)
 document.querySelector(".limpar_log_button").addEventListener("click", limparLog);

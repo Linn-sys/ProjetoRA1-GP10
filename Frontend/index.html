@@ -8,37 +8,48 @@
     <link rel="stylesheet" href="processes.css">
 </head>
 <body>
+    <!-- Metade superior da tela, onde estão os logs dos processos -->
     <div class="processes">
+        <!-- Área total do Processo 1, na esquerda da metade superior da tela -->
         <div class="process_1">
             <div class="process_1_content">
+                <!-- Nome do processo 1 (Remetente, Cliente ou Processo A) -->
                 <h1 id="name_process_1"></h1>  
             </div>
             <section class="section-process_1">
                 <div class="section-process_1_content">
+                    <!-- Seção das mensagens do Processo 1 -->
                     <div class="section-process_1_content log"></div>
                 </div>
             </section>  
         </div>
+        <!-- Área total do Processo 2, na direita da metade superior da tela -->
         <div class="process_2">
             <div class="process_2_content">
+                <!-- Nome do processo 2 (Destinatário, Servidor ou Processo B) -->
                 <h1 id="name_process_2"></h1>   
             </div>
             <section class="section-process_2">
                 <div class="section-process_2_content">
+                    <!-- Seção das mensagens do Processo 2 -->
                     <div class="section-process_2_content log"></div>
                 </div>
             </section>
         </div>
     </div>
+    <!-- Metade inferior da tela, onde ficam os painéis de interação -->
     <div class="guia">
+        <!-- Painel onde estão os botões e inputs dos processos  -->
         <div class="panel_opcoes">
             <div class="panel_superior">
+                <!-- Seleção do tipo de comunicação que será usada -->
                 <small class="escolha">Escolha sua opção de processo:</small>
                 <select name="opcoes" id="opcoes">
                     <option value="pipes" selected>Pipes Anônimos</option>
                     <option value="sockets">Sockets</option>
                     <option value="sharedmemory">Memória Compartilhada</option>
                 </select>
+                 <!-- Botões principais de controle dos processos -->
                 <div class="botoes_superiores">
                     <button type="button" class="processo_start_button">
                         <span>Iniciar processo</span>
@@ -47,14 +58,18 @@
                         <span>Finalizar processo</span>
                     </button>
                 </div>
+                <!-- Status do servidor C++ (mostra se está ligado/desligado) -->
                 <small class="status">Status do servidor C++: <span id="status-text" class="status-off">Desligado</span><span id="status-tipo"> </span></small>
             </div>
             <hr class="linha_guia">
+            <!-- Painel padrão, usado em Pipes ou Sockets -->
             <div id="painel-padrao" class="panel_inferior">
                 <small class="mensagem">Informe uma mensagem de entrada:</small>
                 <div class="entrada">
+                    <!-- Campo para digitar a mensagem que será enviada -->
                     <textarea class="input" maxlength="1000" placeholder="Digite sua mensagem e clique em Enviar"></textarea>
                 </div>
+                <!-- Botões de ação do painel padrão -->
                 <div class="botoes_inferiores">
                     <button type="button" class="enviar_msg_button">
                         <span>Enviar</span>
@@ -63,16 +78,21 @@
                         <span>Limpar Log</span>
                     </button>
                 </div>
+                <!-- Status do último envio de mensagem/ação do usuário -->
                 <small class="status">Status último envio: <span id="status-envio"></span></small>
             </div>
+            <!-- Painel alternativo, usado quando a opção de Memória Compartilhada é selecionada -->
             <div id="painel-sharedmemory" class="panel_inferior" style="display: none;">
                 <small class="mensagem">Informe as mensagens de entrada:</small>
                 <div class="entrada">
+                    <!-- Campo de mensagem para o Processo A -->
                     <textarea class="input-A" placeholder="Mensagem do Processo A"></textarea>
                 </div>
                 <div class="entrada">
+                    <!-- Campo de mensagem para o Processo B -->
                     <textarea class="input-B" placeholder="Mensagem do Processo B"></textarea>
                 </div>
+                <!-- Botões de ação do painel de memória compartilhada -->
                 <div class="botoes_inferiores_sm">
                     <button type="button" class="enviar_msg_button_sm">
                         <span>Enviar</span>
@@ -81,10 +101,12 @@
                         <span>Limpar Log</span>
                     </button>
                 </div>
+                <!-- Status do último envio na memória compartilhada -->
                 <small class="status">Status último envio: <span id="status-envio-sm"></span></small>
             </div>
         </div>
     </div>
+    <!-- Script principal que faz a lógica de interação com os processos -->
 <script src="script.js"></script>  
 </body>
 </html>

@@ -12,7 +12,6 @@
 *.user
 *.pdb
 *.obj
-*.exe
 *.ilk
 *.lib
 *.ncb

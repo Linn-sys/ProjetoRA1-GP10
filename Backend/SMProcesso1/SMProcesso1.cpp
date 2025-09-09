@@ -54,7 +54,7 @@ void write_text(SharedBuffer* shm, HANDLE hMutex, const std::string& text) {
         last = text;
     }
 
-    ReleaseMutex(hMutex);                      // Libera o mutex
+    ReleaseMutex(hMutex); // Libera o mutex
 }
 
 // Thread que faz a leitura contínua da struct do Buffer
@@ -70,7 +70,6 @@ void reader_thread(SharedBuffer* shm, HANDLE hMutex) {
         WaitForSingleObject(hMutex, INFINITE);
         if (shm->exit_flag) { // Caso o flag de saída já esteja marcado encerra a Thread
             ReleaseMutex(hMutex);
-            //std::cout << "\n[Alerta] Chat encerrado pelo outro processo! Pressione Enter para sair.\n";
             std::cout << "{\"processo\":" << MY_ID << ",\"mensagem\":\"[Alerta] Chat encerrado pelo outro processo!  Finalize o processo para encerrar." << "\"}" << std::endl;
             running = false;
             break;
@@ -92,7 +91,6 @@ void input_thread(SharedBuffer* shm, HANDLE hMutex) {
             WaitForSingleObject(hMutex, INFINITE);
             shm->exit_flag = true;
             ReleaseMutex(hMutex);
-            //std::cout << "\n[Alerta] Chat encerrado.\n";
             std::cout << "{\"processo\":" << MY_ID << ",\"mensagem\":\"[Alerta] Chat encerrado!  Finalize o processo para encerrar." << "\"}" << std::endl;
             running = false; // Encerra a Thread
             break;
