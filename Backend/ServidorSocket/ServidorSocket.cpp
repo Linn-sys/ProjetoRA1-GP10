@@ -41,7 +41,7 @@ void handleClient(SOCKET clientSocket) {
         // Transcreve os bytes recebidos em uma mensagem string
         std::string mensagem(buf, 0, bytesReceived);
 
-        // ---------------- (1) BROADCAST DA MENSAGEM RECEBIDA ----------------
+        // ---------------- (1) ENVIO DA MENSAGEM RECEBIDA ----------------
         std::cout << "[Servidor] Recebeu do cliente e retransmitindo: "
             << mensagem << std::endl;
 
@@ -55,15 +55,15 @@ void handleClient(SOCKET clientSocket) {
 
         // ---------------- (2) MONTA RESPOSTA DO "Servidor" ----------------
 
-        // Extrai o valor do campo "mensagem" de um JSON bem simples.
+        // Extrai o valor do campo "mensagem" de um JSON 
         std::string textoCliente;
-        size_t posMensagem = mensagem.find("\"mensagem\":\"");
-        if (posMensagem != std::string::npos) {
+        size_t posMensagem = mensagem.find("\"mensagem\":\""); // Procura a posição da mensagem 
+        if (posMensagem != std::string::npos) { // Caso encontre a mensagem 
             // strlen do literal para encontrar o início do conteúdo do campo
-            size_t startPos = posMensagem + strlen("\"mensagem\":\"");
-            size_t endPos = mensagem.find("\"", startPos);
-            if (endPos != std::string::npos) {
-                textoCliente = mensagem.substr(startPos, endPos - startPos);
+            size_t startPos = posMensagem + strlen("\"mensagem\":\""); // A posição inicial da mensagem é posMensagem + a quantidade de caracteres de "\"mensagem\":\""
+            size_t endPos = mensagem.find("\"", startPos); // Pega a posição final, usando a localização da "\"" na posição startPos
+            if (endPos != std::string::npos) { // Caso encontre a barra 
+                textoCliente = mensagem.substr(startPos, endPos - startPos); // O texto é armazenado sem as barras e aspas, apenas o texto da mensagem recebida pelo JSON do cliente
             }
         }
 
@@ -71,29 +71,28 @@ void handleClient(SOCKET clientSocket) {
         std::string mensagemServidor =
             " Recebeu e processou a seguinte mensagem: " + textoCliente;
 
-        // Escapa aspas duplas (") no conteúdo para gerar JSON válido
-        std::string mensagemServidorEscapada = mensagemServidor;
-        size_t pos = 0;
-        while ((pos = mensagemServidorEscapada.find('"', pos)) != std::string::npos) {
-            mensagemServidorEscapada.replace(pos, 1, "\\\"");
-            pos += 2; // avança depois da sequência de escape
+        // ---- Escapar aspas duplas para JSON válido ----
+        std::string mensagemServidorEscapada = mensagemServidor; // Cria uma cópia da mensagem do servidor
+        size_t pos = 0; 
+        while ((pos = mensagemServidorEscapada.find('"', pos)) != std::string::npos) { // Procura a primeira ocorrência de aspas duplas a partir da posição pos -> 0
+            mensagemServidorEscapada.replace(pos, 1, "\\\""); 
+            pos += 2; // Avança para não cair em loop infinito
         }
 
         // Monta o JSON da resposta (adiciona '\n' ao final)
         std::string respostaServidor =
             "{\"processo\":2,\"mensagem\":\"" + mensagemServidorEscapada + "\"}\n";
 
-        // Envia a resposta do "servidor" para TODOS os clientes (broadcast)
-        mtx.lock();
-        for (SOCKET c : clientes) {
+        mtx.lock(); // Bloqueia o Mutex
+        for (SOCKET c : clientes) { // Envia a resposta do servidor para todos os clientes. Utiliza o iterador de clietes, a resposta e o tamanho da mensagem 
             send(c, respostaServidor.c_str(), (int)respostaServidor.size(), 0);
         }
-        mtx.unlock();
+        mtx.unlock(); // Desbloqueia o Mutex
     }
 
-    mtx.lock();
-    clientes.erase(std::remove(clientes.begin(), clientes.end(), clientSocket), clientes.end());
-    mtx.unlock();
+    mtx.lock(); // Bloqueia o Mutex
+    clientes.erase(std::remove(clientes.begin(), clientes.end(), clientSocket), clientes.end()); // Remove o socket do cliente que saiu
+    mtx.unlock(); // Desbloqueia o Mutex
 
 }
 

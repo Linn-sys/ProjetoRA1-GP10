@@ -19,6 +19,7 @@ int main()
         std::cerr << "{\"processo\":1, \"mensagem\":\"Erro ao criar o pipe\"}" << std::endl;
         return 1;
     }
+
     SetHandleInformation(HandleEscrita, HANDLE_FLAG_INHERIT, 0);//Define o handle de escrita do pai como não herdável
     //Define as estruturas de informação de início e geral do processo
     STARTUPINFO II;
