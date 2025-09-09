@@ -1,73 +1,105 @@
-#define WIN32_LEAN_AND_MEAN
-#include <winsock2.h>
-#include <ws2tcpip.h>
+﻿// Evita que o Windows inclua cabeçalhos desnecessários
+#define WIN32_LEAN_AND_MEAN 
+
+// Biblioteca principal do Winsock 2 (sockets no Windows)
+#include <winsock2.h>  
+
+// Funções adicionais para manipulação de IPs e endereços
+#include <ws2tcpip.h>  
+
+// Bibliotecas padrão do C++ para entrada/saída e strings
 #include <iostream>
-#include <string>�
+#include <string> 
 #include <vector>
 
+// Vincula automaticamente a aplicação com a biblioteca do Winsock
 #pragma comment(lib, "ws2_32.lib")
 
 int main() {
-	WSADATA wsaData;
-	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (result != 0) {
-		std::cerr << "WSAStartup falhou: " << result << std::endl;
-		return 1;
-	}
+    // Estrutura que receberá informações sobre a implementação do Winsock
+    WSADATA wsaData;
 
-	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock == INVALID_SOCKET) {
-		std::cerr << "Erro ao criar socket." << std::endl;
-		WSACleanup();
-		return 1;
-	}
+    // Inicializa o Winsock (versão 2.2)
+    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (result != 0) { // Se falhar, retorna um código de erro
+        std::cerr << "WSAStartup falhou: " << result << std::endl;
+        return 1;
+    }
 
-	sockaddr_in hint{};
-	hint.sin_family = AF_INET;
-	hint.sin_port = htons(54000);
-	inet_pton(AF_INET, "127.0.0.1", &hint.sin_addr);
+    // Cria um socket TCP (SOCK_STREAM) sobre IPv4 (AF_INET)
+    SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock == INVALID_SOCKET) { // Em caso de falha
+        std::cerr << "Erro ao criar socket." << std::endl;
+        WSACleanup(); // Libera recursos do Winsock
+        return 1;
+    }
 
-	if (connect(sock, (sockaddr*)&hint, sizeof(hint)) == SOCKET_ERROR) {
-		std::cerr << "Erro ao conectar no servidor." << std::endl;
-		closesocket(sock);
-		WSACleanup();
-		return 1;
-	}
+    // Estrutura que guarda o endereço do servidor
+    sockaddr_in hint{};
+    hint.sin_family = AF_INET;              // IPv4
+    hint.sin_port = htons(54000);           // Porta do servidor (54000), convertida para big-endian
+    inet_pton(AF_INET, "127.0.0.1", &hint.sin_addr); // Converte o IP string → formato binário
 
-	std::cout << "[Cliente] Conectado ao servidor em 127.0.0.1:54000.\n";
+    // Solicita a conexão com o servidor no IP/porta definidos
+    if (connect(sock, (sockaddr*)&hint, sizeof(hint)) == SOCKET_ERROR) {
+        std::cerr << "Erro ao conectar no servidor." << std::endl;
+        closesocket(sock);  // Fecha o socket em caso de falha
+        WSACleanup();       // Limpa o Winsock
+        return 1;
+    }
 
-	std::string msg;
-	char buf[4096];
+    std::cout << "[Cliente] Conectado ao servidor em 127.0.0.1:54000.\n";
 
-	while (std::getline(std::cin, msg)) { // Altera para ler do stdin
-		if (msg == "sair") break;
+    // Buffer para armazenar mensagens recebidas do servidor
+    char buf[4096];
+    // String para armazenar a entrada do usuário
+    std::string msg;
 
-		// Escapa as aspas duplas da mensagem antes de montar o JSON
-		std::string mensagemEscapada = msg;
-		size_t pos = 0;
-		while ((pos = mensagemEscapada.find('"', pos)) != std::string::npos) {
-			mensagemEscapada.replace(pos, 1, "\\\"");
-			pos += 2; // Avanca para evitar um loop infinito
-		}
+    // Loop principal: lê mensagens digitadas no console
+    while (std::getline(std::cin, msg)) {
+        if (msg == "sair") break; // Encerra se o usuário digitar "sair"
 
-		// CORRIGIDO: MONTA O JSON CORRETAMENTE COM ASPAS NAS CHAVES
-		std::string jsonMsg = R"({"processo":1,"mensagem":")" + mensagemEscapada + "\"}\n";
+        // ---- Escapar aspas duplas para JSON válido ----
+        std::string mensagemEscapada = msg;
+        size_t pos = 0;
+        while ((pos = mensagemEscapada.find('"', pos)) != std::string::npos) {
+            // Substitui " por \" no texto
+            mensagemEscapada.replace(pos, 1, "\\\"");
+            pos += 2; // Avança para não cair em loop infinito
+        }
 
-		int sendResult = send(sock, jsonMsg.c_str(), (int)jsonMsg.size(), 0);
+        // ---- Monta o JSON para enviar ao servidor ----
+        // Exemplo: {"processo":1,"mensagem":"Olá mundo"}
+        std::string jsonMsg = R"({"processo":1,"mensagem":")" + mensagemEscapada + "\"}\n";
 
-		if (sendResult != SOCKET_ERROR) {
-			// Recebe as duas respostas do Servidor C++
-			int bytesReceived1 = recv(sock, buf, 4096, 0);
-			if (bytesReceived1 > 0) {
-				// N�o fazemos nada, apenas garantimos que os dados s�o lidos
-			}
-			int bytesReceived2 = recv(sock, buf, 4096, 0);
-			if (bytesReceived2 > 0) {
-				// e a segunda.
-			}
-		}
-	}
-	closesocket(sock);
-	WSACleanup();
-	return 0;
+        // ---- Envia o JSON pelo socket ----
+        int sendResult = send(sock, jsonMsg.c_str(), (int)jsonMsg.size(), 0);
+
+        // ---- Se envio foi bem-sucedido, espera as respostas ----
+        if (sendResult != SOCKET_ERROR) {
+            // Servidor deve mandar duas respostas (processo 1 e 2)
+
+            // Primeira resposta do servidor (retransmissão)
+            int bytesReceived1 = recv(sock, buf, 4096, 0);
+            if (bytesReceived1 > 0) {
+                // Neste código original não imprime nada,
+                // apenas lê para consumir do buffer
+                // Poderíamos imprimir aqui: std::cout << std::string(buf, bytesReceived1);
+            }
+
+            // Segunda resposta do servidor (processada)
+            int bytesReceived2 = recv(sock, buf, 4096, 0);
+            if (bytesReceived2 > 0) {
+                // Também lida mas ignorada
+            }
+        }
+    }
+
+    // Fecha o socket
+    closesocket(sock);
+
+    // Libera os recursos do Winsock
+    WSACleanup();
+
+    return 0; // Finaliza o programa
 }
