@@ -2,7 +2,7 @@
 ### Repositório para o desenvolvimento do projeto RA1 da matéria de sistemas de computação PUCPR
 
 ## Pipes
-### Essencialmente implementei um **pipe** que com sucesso transmite uma string digitada pelo usuário do processo principal para o filho e então imprime no filho, é necessário implementar JSON para controle de fluxo e integração com o FRONTEND.
+### Essencialmente implementei um **pipe** que com sucesso transmite uma string digitada pelo usuário do processo principal para o filho e então imprime no filho, é necessário implementar JSON para controle de fluxo e integração com o FRONTEND. O PipeMain é o processo que cria o processo filho chamado aptamente de Offshoot para enviar dados por pipe anônimo utilizando a api do windows.
 
 ## Sockets
 ### Têm-se um **Servidor Socket** (arquivo c++) que é iniciado na porta 54000 e um **Cliente Socket** (arquivo c++) que se conecta nessa mesma porta, e quando o cliente envia uma mensagem para o servidor, essa troca de informações é acompanhada e registrada pelo servidor node, que recupera as mensagens e envia para o front, mostrando na tela a mensagem *X* enviada do cliente, e o aviso de que o servidor recebeu *X* mensagem.

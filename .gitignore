@@ -19,5 +19,4 @@
 *.VC.db
 ipch/
 *.opensdf
-Debug/
 Release/
